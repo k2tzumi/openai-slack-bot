@@ -1,0 +1,34 @@
+{
+  "timeZone": "Asia/Tokyo",
+  "dependencies": {
+    "libraries": [
+      {
+        "userSymbol": "cCryptoGS",
+        "libraryId": "1IEkpeS8hsMSVLRdCMprij996zG6ek9UvGwcCJao_hlDMlgbWWvJpONrs",
+        "version": "4"
+      },
+      {
+        "userSymbol": "JobBroker",
+        "libraryId": "11cz2CGI2m3W1_JS7PwnxL2_6hkvtj47ynFuxKDDAAUwh3jP04sYnigg8",
+        "version": "20"
+      },
+      {
+        "userSymbol": "OAuth2",
+        "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
+        "version": "43"
+      }
+    ]
+  },
+  "webapp": {
+    "access": "ANYONE_ANONYMOUS",
+    "executeAs": "USER_DEPLOYING"
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "urlFetchWhitelist": [
+    "https://slack.com/",
+    "https://api.slack.com/",
+    "https://hooks.slack.com/",
+    "https://api.openai.com"
+  ],
+  "runtimeVersion": "V8"
+}
