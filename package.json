@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/k2tzumi/openai-bot.git"
+    "url": "git+https://github.com/k2tzumi/openai-slack-bot.git"
   },
   "author": "k2tzumi",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/k2tzumi/openai-bot/issues"
+    "url": "https://github.com/k2tzumi/openai-slack-bot/issues"
   },
-  "homepage": "https://github.com/k2tzumi/openai-bot#readme",
+  "homepage": "https://github.com/k2tzumi/openai-slack-bot#readme",
   "devDependencies": {
     "@google/clasp": "^2.4.2",
     "@types/google-apps-script": "^1.0.57",
