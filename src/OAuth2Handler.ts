@@ -86,6 +86,10 @@ class OAuth2Handler {
     return this.propertyStore.getProperty("INCOMING_WEBHOOKS_URL");
   }
 
+  public get installUrl(): string {
+    return `https://slack.com/oauth/v2/authorize?scope=${OAuth2Handler.SCOPE}&client_id=${this.clientId}&install_redirect=general`;
+  }
+
   private get eventSubscriptionsUrl(): string | null {
     if (this.oAuthAccess) {
       return `https://api.slack.com/apps/${this.oAuthAccess.app_id}/event-subscriptions`;
@@ -123,7 +127,8 @@ class OAuth2Handler {
     this.service = OAuth2.createService("slack")
       .setAuthorizationBaseUrl("https://slack.com/oauth/v2/authorize")
       .setTokenUrl("https://api.slack.com/methods/oauth.v2.access")
-      .setTokenFormat(GoogleAppsScriptOAuth2.TokenFormat.FORM_URL_ENCODED)
+      .setTokenFormat("application/x-www-form-urlencoded")
+      // .setTokenFormat(GoogleAppsScriptOAuth2.TokenFormat.FORM_URL_ENCODED)
       .setClientId(this.clientId)
       .setClientSecret(this.clientSecret)
       .setCallbackFunction(this.callbackFunctionName)
