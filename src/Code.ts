@@ -8,7 +8,6 @@ import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
 import { UserCredentialStore, UserCredential } from "./UserCredentialStore";
 import "apps-script-jobqueue";
 
-
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 type DoPost = GoogleAppsScript.Events.DoPost;
@@ -22,11 +21,13 @@ type InteractionResponse = Slack.Interactivity.InteractionResponse;
 type AppMentionEvent =
   | Slack.CallbackEvent.AppMentionEvent
   | Record<string, any>;
-  
+type AppsManifest = Slack.Tools.AppsManifest;
+
 const properties = PropertiesService.getScriptProperties();
 
-const CLIENT_ID: string = properties.getProperty("CLIENT_ID") || "";
-const CLIENT_SECRET: string = properties.getProperty("CLIENT_SECRET") || "";
+const CLIENT_ID: string = properties.getProperty("CLIENT_ID") || "dummy";
+const CLIENT_SECRET: string =
+  properties.getProperty("CLIENT_SECRET") || "dummy";
 let handler: OAuth2Handler;
 
 const handleCallback = (request): HtmlOutput => {
@@ -47,28 +48,72 @@ function initializeOAuth2Handler(): void {
  * Authorizes and makes a request to the Slack API.
  */
 function doGet(request: DoGet): HtmlOutput {
-  initializeOAuth2Handler();
+  // initializeOAuth2Handler();
 
   // Clear authentication by accessing with the get parameter `?logout=true`
   if (request.parameter.hasOwnProperty("logout")) {
-    handler.clearService();
+    // handler.clearService();
     const template = HtmlService.createTemplate(
-      'Logout<br /><a href="<?= requestUrl ?>" target="_blank">refresh</a>.'
+      'Logout<br /><a href="<?= requestUrl ?>" target="_parent">refresh</a>.'
     );
-    template.requestUrl = handler.requestURL;
+    template.requestUrl = ScriptApp.getService().getUrl();
     return HtmlService.createHtmlOutput(template.evaluate());
   }
 
-  if (handler.verifyAccessToken()) {
-    return HtmlService.createHtmlOutput("OK");
+  // if (handler.verifyAccessToken()) {
+  if (request.parameter.hasOwnProperty("token")) {
+    const client = new SlackApiClient(request.parameter.token);
+    const createResponse = client.createAppsManifest(createAppsManifest());
+
+    const oAuth2Handler = new OAuth2Handler(
+      createResponse.credentials.client_id,
+      createResponse.credentials.client_secret,
+      PropertiesService.getUserProperties(),
+      handleCallback.name
+    );
+
+    const updateResponse = client.updateAppsManifest(createResponse.app_id, createAppsManifest(oAuth2Handler.authorizationUrl));
+
+    const template = HtmlService.createTemplate(
+      '<a href="<?!= oauthUrl ?>" target="_parent">Add to Slack</a>'
+    );
+    template.oauthUrl = oAuth2Handler.installUrl;
+
+    return HtmlService.createHtmlOutput(template.evaluate());
   } else {
     const template = HtmlService.createTemplate(
-      'RedirectUri:<?= redirectUrl ?> <br /><a href="<?= authorizationUrl ?>" target="_blank">Authorize</a>.'
+      '<a href="https://api.slack.com/authentication/config-tokens#creating" target="_blank">Create configuration token</a><br />' +
+        '<form action="<?!= redirectUrl ?>" method="get" target="_parent"><p>config tokens:<input type="text" name="token"></p><input type="submit" name="" value="Create App"></form>'
     );
-    template.authorizationUrl = handler.authorizationUrl;
-    template.redirectUrl = handler.redirectUri;
+    template.authorizationUrl = ScriptApp.getService().getUrl();
+    template.redirectUrl = ScriptApp.getService().getUrl();
     return HtmlService.createHtmlOutput(template.evaluate());
   }
+}
+
+function createAppsManifest(authorizationUrl: string = null): AppsManifest {
+  const appsManifest = {
+    display_information: {
+      name: "OpenAI Bot",
+    }
+  } as AppsManifest;
+
+  if (authorizationUrl !== null) {
+    appsManifest.features = {
+      bot_user: {
+        display_name: "open-ai"
+      }
+    };
+
+    appsManifest.oauth_config = {
+      redirect_urls: [authorizationUrl],
+      scopes: {
+        bot: OAuth2Handler.SCOPE.split(","),
+      },
+    };
+  }
+
+  return appsManifest;
 }
 
 const asyncLogging = (): void => {
@@ -119,9 +164,7 @@ const executeAppMentionEvent = (event: AppMentionEvent): void => {
   const credential: UserCredential = store.getUserCredential(event.user);
 
   if (credential) {
-    if (
-      slackApiClient.addReactions(event.channel, START_REACTION, event.ts)
-    ) {
+    if (slackApiClient.addReactions(event.channel, START_REACTION, event.ts)) {
       JobBroker.enqueueAsyncJob(executeStartTalk, event);
     }
   } else {
@@ -137,17 +180,12 @@ const executeStartTalk = (): void => {
   initializeOAuth2Handler();
   JobBroker.consumeAsyncJob((event: AppMentionEvent) => {
     const client = new SlackApiClient(handler.token);
-    client.chatPostMessage(
-      event.channel,
-      `<@${event.user}>\nHello.`,
-      event.ts
-    );
-}, "executeStartTalk");
+    client.chatPostMessage(event.channel, `<@${event.user}>\nHello.`, event.ts);
+  }, "executeStartTalk");
 };
-
 
 function makePassphraseSeeds(user_id: string): string {
   return CLIENT_ID + user_id + CLIENT_SECRET;
 }
 
-export {  };
+export {};
