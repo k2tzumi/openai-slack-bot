@@ -3,6 +3,7 @@ import { NetworkAccessError } from "./NetworkAccessError";
 type URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 type HttpMethod = GoogleAppsScript.URL_Fetch.HttpMethod;
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
+type AppsManifest = Slack.Tools.AppsManifest;
 
 interface Response {
   ok: boolean;
@@ -72,6 +73,22 @@ interface ConversationsHistoryResponse extends Response {
   has_more: boolean;
   pin_count: number;
   response_metadata: { next_cursor: string };
+}
+
+interface CreateAppsManifestResponse extends Response {
+  app_id: string;
+  credentials: {
+    client_id: string;
+    client_secret: string;
+    verification_token: string;
+    signing_secret: string;
+  };
+  oauth_authorize_url: string;
+}
+
+interface UpdateManifestResponse extends Response {
+  app_id: string;
+  permissions_updated: boolean;
 }
 
 class SlackApiClient {
@@ -350,6 +367,51 @@ class SlackApiClient {
         )}, payload: ${JSON.stringify(payload)}`
       );
     }
+  }
+
+  public createAppsManifest(
+    appsManifest: AppsManifest,
+  ): CreateAppsManifestResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.create";
+    const manifest = JSON.stringify(appsManifest);
+    let payload: {} = {};
+    payload = { ...payload, manifest};
+
+    const response = this.invokeAPI(endPoint, payload) as CreateAppsManifestResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `create apps manifest faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  public updateAppsManifest(
+    app_id: string,
+    appsManifest: AppsManifest,
+  ): UpdateManifestResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.update";
+    const manifest = JSON.stringify(appsManifest);
+    let payload: {} = {
+      app_id
+    };
+    payload = { ...payload, manifest };
+
+    const response = this.invokeAPI(endPoint, payload) as UpdateManifestResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `update apps manifest faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
   }
 
   private convertBlock2Text(blocks: (Block | {})[]): string {
