@@ -63,5 +63,12 @@ declare namespace Slack {
         };
       };
     }
+
+    interface Credentials {
+        client_id: string;
+        client_secret: string;
+        verification_token: string;
+        signing_secret: string;
+    }
   }
 }

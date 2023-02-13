@@ -4,6 +4,7 @@ type URLFetchRequestOptions = GoogleAppsScript.URL_Fetch.URLFetchRequestOptions;
 type HttpMethod = GoogleAppsScript.URL_Fetch.HttpMethod;
 type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
 type AppsManifest = Slack.Tools.AppsManifest;
+type Credentials = Slack.Tools.Credentials;
 
 interface Response {
   ok: boolean;
@@ -77,12 +78,7 @@ interface ConversationsHistoryResponse extends Response {
 
 interface CreateAppsManifestResponse extends Response {
   app_id: string;
-  credentials: {
-    client_id: string;
-    client_secret: string;
-    verification_token: string;
-    signing_secret: string;
-  };
+  credentials: Credentials;
   oauth_authorize_url: string;
 }
 
