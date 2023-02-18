@@ -9,7 +9,7 @@ class SlackConfigurator {
   private property: GoogleAppsScript.Properties.Properties;
   
   public constructor(
-    private refresh_token: string = null,
+    public refresh_token: string = null,
   ) {
     this.property = PropertiesService.getScriptProperties();
     if (refresh_token == null) {
