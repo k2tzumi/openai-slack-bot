@@ -87,6 +87,15 @@ interface UpdateManifestResponse extends Response {
   permissions_updated: boolean;
 }
 
+interface RotateTokensResponse extends Response {
+  token: string;
+  refresh_token: string;
+  team_id: string;
+  user_id: string;
+  iat: number;
+  exp: number;
+}
+
 class SlackApiClient {
   static readonly BASE_PATH = "https://slack.com/api/";
 
@@ -176,13 +185,19 @@ class SlackApiClient {
     return true;
   }
 
-  public postEphemeral(channel: string, text: string, user: string): void {
+  public postEphemeral(channel: string, text: string, user: string, blocks: (Block | {})[] = null): void {
     const endPoint = SlackApiClient.BASE_PATH + "chat.postEphemeral";
-    const payload: {} = {
+    var payload: {} = {
       channel,
       text,
       user,
     };
+    if (blocks) {
+      if (!text) {
+        text = this.convertBlock2Text(blocks);
+      }
+      payload = { ...payload, blocks };
+    }
 
     const response: Response = this.invokeAPI(endPoint, payload);
 
@@ -410,6 +425,48 @@ class SlackApiClient {
     return response;
   }
 
+  public deleteAppsManifest(
+    app_id: string,
+  ): Response {
+    const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.delete";
+    let payload: {} = {
+      app_id
+    };
+
+    const response = this.invokeAPI(endPoint, payload) as Response;
+
+    if (!response.ok) {
+      throw new Error(
+        `delete apps manifest faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  public rotateTokens(
+    refresh_token: string,
+  ): RotateTokensResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "tooling.tokens.rotate";
+    let payload: {} = {
+      refresh_token
+    };
+
+    const response = this.invokeAPI(endPoint, payload) as RotateTokensResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `roteate tokens faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
   private convertBlock2Text(blocks: (Block | {})[]): string {
     const textArray = [];
     blocks.forEach((block) => {
@@ -526,6 +583,7 @@ class SlackApiClient {
   private preferredHttpMethod(endPoint: string): HttpMethod {
     switch (true) {
       case /(.)*conversations\.history$/.test(endPoint):
+      case /(.)*tooling\.tokens\.rotate$/.test(endPoint):
         return "get";
       default:
         return "post";
