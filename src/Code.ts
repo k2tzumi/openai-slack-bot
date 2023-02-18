@@ -15,9 +15,7 @@ type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 type DoPost = GoogleAppsScript.Events.DoPost;
 type DoGet = GoogleAppsScript.Events.DoGet;
 type Commands = Slack.SlashCommand.Commands;
-type MultiUsersSelectAction = Slack.Interactivity.MultiUsersSelectAction;
 type BlockActions = Slack.Interactivity.BlockActions;
-type StaticSelectAction = Slack.Interactivity.StaticSelectAction;
 type ButtonAction = Slack.Interactivity.ButtonAction;
 type InteractionResponse = Slack.Interactivity.InteractionResponse;
 type AppMentionEvent =
@@ -74,12 +72,11 @@ function doGet(request: DoGet): HtmlOutput {
   } else {
     const template = HtmlService.createTemplate(
       '<a href="https://api.slack.com/authentication/config-tokens#creating" target="_blank">Create configuration token</a><br />' +
-          '<form action="<?!= requestURL ?>" method="get" target="_parent"><p>Configuration Tokens(Refresh Token):<input type="text" name="token"></p><input type="submit" name="" value="Create App"></form>'
+          '<form action="<?!= requestURL ?>" method="get" target="_parent"><p>Configuration Tokens(Refresh Token):<input type="password" name="token" value="<?!= refreshToken ?>"></p><input type="submit" name="" value="Create App"></form>'
     );
     template.requestURL = handler.requestURL;
-    const out = HtmlService.createHtmlOutput(template.evaluate());
-    out.setTitle("Start Slack application configuration.");
-    return out;
+    template.refreshToken = new SlackConfigurator().refresh_token;
+    return HtmlService.createHtmlOutput(template.evaluate()).setTitle("Start Slack application configuration.");
   }
 }
 
@@ -103,10 +100,7 @@ function configuration(data): HtmlOutput {
   );
   template.installUrl = oAuth2Handler.installUrl;
 
-  const out = HtmlService.createHtmlOutput(template.evaluate());
-  out.setTitle("Slack application configuration is complete.");
-
-  return out;
+  return HtmlService.createHtmlOutput(template.evaluate()).setTitle("Slack application configuration is complete.");
 }
 
 function createAppsManifest(redirectUrls: string[] = null, requestUrl: string = null): AppsManifest {
@@ -134,6 +128,10 @@ function createAppsManifest(redirectUrls: string[] = null, requestUrl: string = 
       event_subscriptions: {
         request_url: requestUrl,
         bot_events: ["app_mention"],
+      },
+      interactivity: {
+        is_enabled: true,
+        request_url: requestUrl,
       }
     }
   }
@@ -154,7 +152,7 @@ function doPost(e: DoPost): TextOutput {
   const slackHandler = new SlackHandler(credentail.verification_token);
 
   slackHandler.addCallbackEventListener("app_mention", executeAppMentionEvent);
-
+  slackHandler.addInteractivityListener("button", executeButton);
   try {
     const process = slackHandler.handle(e);
 
@@ -175,6 +173,39 @@ function doPost(e: DoPost): TextOutput {
 
   throw new Error(`No performed handler, request: ${JSON.stringify(e)}`);
 }
+
+const executeButton = (blockActions: BlockActions): {} => {
+  const action = blockActions.actions[0] as ButtonAction;
+  const response: InteractionResponse = {};
+
+  const webhook = new SlackWebhooks(blockActions.response_url);
+  const client = new SlackApiClient(handler.token);
+  const channel: string = blockActions.channel.id;
+
+  switch (action.action_id) {
+    case "ok":
+      response.delete_original = "true";
+      const store = new UserCredentialStore(
+        PropertiesService.getUserProperties(),
+        makePassphraseSeeds(blockActions.user.id)
+      );
+
+      store.setUserCredential(
+        blockActions.user.id,
+        { apiKey: blockActions.state.values.token.token_input.value } as UserCredential
+      );
+
+      break;
+  }
+
+  if (!webhook.invoke(response)) {
+    throw new Error(
+      `executeButton faild. event: ${JSON.stringify(blockActions)}`
+    );
+  }
+
+  return {};
+};
 
 const START_REACTION: string =
   properties.getProperty("START_REACTION") || "robot_face";
@@ -205,6 +236,7 @@ function createInputTokenBlocks(): {}[] {
   return [
     {
       "type": "input",
+      "block_id": "token",
       "element": {
         "type": "plain_text_input",
         "action_id": "token_input"
@@ -213,7 +245,22 @@ function createInputTokenBlocks(): {}[] {
         "type": "plain_text",
         "text": "Input Token"
       }
-    }
+    },
+    {
+      type: "actions",
+      block_id: "submit",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "OK",
+          },
+          value: '{ "ok": true }',
+          action_id: "ok",
+        },
+      ],
+    },
   ];
 }
 
