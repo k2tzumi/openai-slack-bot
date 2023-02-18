@@ -47,6 +47,9 @@ declare namespace Slack {
         ts: string;
       };
       view?: { id: string; hash: string };
+      state?: {
+        values: any;
+      };
       response_url?: string;
       actions: [
         ButtonAction | MultiUsersSelectAction | StaticSelectAction | ActionBase
