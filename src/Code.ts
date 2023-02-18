@@ -6,8 +6,9 @@ import { SlackWebhooks } from "./SlackWebhooks";
 import { SlackApiClient } from "./SlackApiClient";
 import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
 import { UserCredentialStore, UserCredential } from "./UserCredentialStore";
-import "apps-script-jobqueue";
 import { SlackCredentialStore } from "./SlackCredentialStore";
+import { SlackConfigurator } from "./SlackConfigurator";
+import "apps-script-jobqueue";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -53,6 +54,11 @@ function doGet(request: DoGet): HtmlOutput {
   // Clear authentication by accessing with the get parameter `?logout=true`
   if (request.parameter.hasOwnProperty("logout")) {
     handler.clearService();
+    const slackCredentialStore = new SlackCredentialStore(properties);
+    slackCredentialStore.removeCredential();
+    const slackConfigurator = new SlackConfigurator();
+    slackConfigurator.deleteApps();
+
     const template = HtmlService.createTemplate(
       'Logout<br /><a href="<?= requestUrl ?>" target="_parent">refresh</a>.'
     );
@@ -64,35 +70,43 @@ function doGet(request: DoGet): HtmlOutput {
     return HtmlService.createHtmlOutput("OK!");
   }
   if (request.parameter.hasOwnProperty("token")) {
-    const client = new SlackApiClient(request.parameter.token);
-    const createResponse = client.createAppsManifest(createAppsManifest());
-    const slackCredentialStore = new SlackCredentialStore(properties);
-    const credentail = createResponse.credentials;
-
-    slackCredentialStore.setCredential(credentail);
-
-    const oAuth2Handler = new OAuth2Handler(
-      credentail,
-      PropertiesService.getUserProperties(),
-      handleCallback.name
-    );
-
-    const updateResponse = client.updateAppsManifest(createResponse.app_id, createAppsManifest([oAuth2Handler.callbackURL], oAuth2Handler.requestURL));
-
-    const template = HtmlService.createTemplate(
-      '<a href="<?!= installUrl ?>" target="_parent" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px"><svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Add to Slack</a>'
-    );
-    template.installUrl = oAuth2Handler.installUrl;
-
-    return HtmlService.createHtmlOutput(template.evaluate());
+    return configuration(request.parameter);
   } else {
     const template = HtmlService.createTemplate(
       '<a href="https://api.slack.com/authentication/config-tokens#creating" target="_blank">Create configuration token</a><br />' +
-          '<form action="<?!= requestURL ?>" method="get" target="_parent"><p>config tokens:<input type="text" name="token"></p><input type="submit" name="" value="Create App"></form>'
+          '<form action="<?!= requestURL ?>" method="get" target="_parent"><p>Configuration Tokens(Refresh Token):<input type="text" name="token"></p><input type="submit" name="" value="Create App"></form>'
     );
     template.requestURL = handler.requestURL;
-    return HtmlService.createHtmlOutput(template.evaluate());
+    const out = HtmlService.createHtmlOutput(template.evaluate());
+    out.setTitle("Start Slack application configuration.");
+    return out;
   }
+}
+
+function configuration(data): HtmlOutput {
+  const slackConfigurator = new SlackConfigurator(data.token);
+  const credentail = slackConfigurator.createApps(createAppsManifest());
+  const slackCredentialStore = new SlackCredentialStore(properties);
+
+  slackCredentialStore.setCredential(credentail);
+
+  const oAuth2Handler = new OAuth2Handler(
+    credentail,
+    PropertiesService.getUserProperties(),
+    handleCallback.name
+  );
+
+  slackConfigurator.updateApps(createAppsManifest([oAuth2Handler.callbackURL], oAuth2Handler.requestURL));
+
+  const template = HtmlService.createTemplate(
+    '<a href="<?!= installUrl ?>" target="_parent" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px"><svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Add to Slack</a>'
+  );
+  template.installUrl = oAuth2Handler.installUrl;
+
+  const out = HtmlService.createHtmlOutput(template.evaluate());
+  out.setTitle("Slack application configuration is complete.");
+
+  return out;
 }
 
 function createAppsManifest(redirectUrls: string[] = null, requestUrl: string = null): AppsManifest {
@@ -181,10 +195,27 @@ const executeAppMentionEvent = (event: AppMentionEvent): void => {
     slackApiClient.postEphemeral(
       event.channel,
       `Not exists credential.`,
-      event.user
+      event.user,
+      createInputTokenBlocks()
     );
   }
 };
+
+function createInputTokenBlocks(): {}[] {
+  return [
+    {
+      "type": "input",
+      "element": {
+        "type": "plain_text_input",
+        "action_id": "token_input"
+      },
+      "label": {
+        "type": "plain_text",
+        "text": "Input Token"
+      }
+    }
+  ];
+}
 
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
