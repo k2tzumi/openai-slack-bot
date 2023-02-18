@@ -4,6 +4,7 @@ import { OAuth2Handler } from "./OAuth2Handler";
 import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { SlackApiClient } from "./SlackApiClient";
+import { OpenAiClient } from "./OpenAiClient";
 import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
 import { UserCredentialStore, UserCredential } from "./UserCredentialStore";
 import { SlackCredentialStore } from "./SlackCredentialStore";
@@ -185,6 +186,11 @@ const executeButton = (blockActions: BlockActions): {} => {
   switch (action.action_id) {
     case "ok":
       response.delete_original = "true";
+      const apiKey = blockActions.state.values.api_key.api_key_input.value;
+      const openAiClient = new OpenAiClient(apiKey);
+
+      const models = openAiClient.listModels();
+
       const store = new UserCredentialStore(
         PropertiesService.getUserProperties(),
         makePassphraseSeeds(blockActions.user.id)
@@ -192,7 +198,7 @@ const executeButton = (blockActions: BlockActions): {} => {
 
       store.setUserCredential(
         blockActions.user.id,
-        { apiKey: blockActions.state.values.token.token_input.value } as UserCredential
+        { apiKey: apiKey } as UserCredential
       );
 
       break;
@@ -227,23 +233,23 @@ const executeAppMentionEvent = (event: AppMentionEvent): void => {
       event.channel,
       `Not exists credential.`,
       event.user,
-      createInputTokenBlocks()
+      createInputApoKeyBlocks()
     );
   }
 };
 
-function createInputTokenBlocks(): {}[] {
+function createInputApoKeyBlocks(): {}[] {
   return [
     {
       "type": "input",
-      "block_id": "token",
+      "block_id": "api_key",
       "element": {
         "type": "plain_text_input",
-        "action_id": "token_input"
+        "action_id": "api_key_input"
       },
       "label": {
         "type": "plain_text",
-        "text": "Input Token"
+        "text": "Input API Key"
       }
     },
     {
@@ -267,8 +273,18 @@ function createInputTokenBlocks(): {}[] {
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
   JobBroker.consumeAsyncJob((event: AppMentionEvent) => {
+    const store = new UserCredentialStore(
+      PropertiesService.getUserProperties(),
+      makePassphraseSeeds(event.user)
+    );
+
+    const credential = store.getUserCredential(event.user);
+
+    const openAiClient = new OpenAiClient(credential.apiKey);
+    const response = openAiClient.completions(event.text);
+
     const client = new SlackApiClient(handler.token);
-    client.chatPostMessage(event.channel, `<@${event.user}>\nHello.`, event.ts);
+    client.chatPostMessage(event.channel, response.choices[0].text, event.ts);
   }, "executeStartTalk");
 };
 
