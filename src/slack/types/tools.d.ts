@@ -1,5 +1,6 @@
 declare namespace Slack {
   namespace Tools {
+    // @see https://api.slack.com/reference/manifests#fields
     interface AppsManifest {
       _metadata?: {
         major_version?: number;
