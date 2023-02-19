@@ -1,6 +1,8 @@
 declare namespace Slack {
   namespace Tools {
-    // @see https://api.slack.com/reference/manifests#fields
+    /**
+     * @see https://api.slack.com/reference/manifests#fields
+     */
     interface AppsManifest {
       _metadata?: {
         major_version?: number;
@@ -38,7 +40,7 @@ declare namespace Slack {
           always_online?: boolean;
         };
         shortcuts?: {
-          name: string,
+          name: string;
           callback_id: string;
           description: string;
           type: string;
@@ -66,10 +68,10 @@ declare namespace Slack {
     }
 
     interface Credentials {
-        client_id: string;
-        client_secret: string;
-        verification_token: string;
-        signing_secret: string;
+      client_id: string;
+      client_secret: string;
+      verification_token: string;
+      signing_secret: string;
     }
   }
 }
