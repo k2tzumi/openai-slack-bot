@@ -43,8 +43,7 @@ open: .clasp.json
 .PHONY: application
 application: ## Open web application
 application: .clasp.json
-	# clasp open --webapp
-	clasp deployments | awk '/@HEAD/ {print $$2}' | xargs -I{} open https://script.google.com/macros/s/{}/dev
+	clasp open --webapp
 
 .PHONY: pull
 pull: ## Pull Google apps scripts
