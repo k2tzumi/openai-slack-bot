@@ -21,7 +21,7 @@ interface CompletionsResponse {
   choices: {
     text: string;
     index: number;
-    logprobs: number|null;
+    logprobs: number | null;
     finish_reason: string;
   }[];
   usage: {
@@ -38,8 +38,7 @@ class OpenAiClient {
 
   public listModels(): Models {
     const endPoint = OpenAiClient.BASE_PATH + "models";
-    const payload: {} = {
-    };
+    const payload: {} = {};
 
     const response: Models = this.invokeAPI(endPoint, payload);
 
@@ -52,7 +51,7 @@ class OpenAiClient {
       model: "text-davinci-003",
       prompt: prompt,
       temperature: 0,
-      max_tokens: 1000
+      max_tokens: 1000,
     };
 
     const response: CompletionsResponse = this.invokeAPI(endPoint, payload);

@@ -93,11 +93,15 @@ class OAuth2Handler {
   }
 
   public get installUrl(): string {
-    return `https://slack.com/oauth/v2/authorize?scope=${encodeURI(OAuth2Handler.SCOPE)}&client_id=${this.credentials.client_id}&redirect_uri=${this.authorizationUrl}`;
+    return `https://slack.com/oauth/v2/authorize?scope=${encodeURI(
+      OAuth2Handler.SCOPE
+    )}&client_id=${this.credentials.client_id}&redirect_uri=${
+      this.authorizationUrl
+    }`;
   }
 
   public static readonly SCOPE =
-    "commands,chat:write,channels:history,groups:history,mpim:history,im:history,app_mentions:read,reactions:write";
+    "commands,chat:write,channels:history,groups:history,mpim:history,im:history,app_mentions:read,reactions:write,users:read";
 
   private service: OAuth2Service;
 
@@ -135,7 +139,9 @@ class OAuth2Handler {
       }
     }
 
-    return HtmlService.createHtmlOutput("Denied. You can close this tab.").setTitle("OAuth failed.");
+    return HtmlService.createHtmlOutput(
+      "Denied. You can close this tab."
+    ).setTitle("OAuth failed.");
   }
 
   /**
@@ -205,7 +211,9 @@ class OAuth2Handler {
   };
 
   private createAuthenSuccessHtml(): HtmlOutput {
-    return HtmlService.createHtmlOutput("Success!<br />").setTitle("OAuth is now complete.");
+    return HtmlService.createHtmlOutput("Success!<br />").setTitle(
+      "OAuth is now complete."
+    );
   }
 }
 
