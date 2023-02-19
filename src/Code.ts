@@ -292,7 +292,11 @@ const executeMessageRepliedEvent = (event: MessageRepliedEvent): void => {
 function isBotReplyInThread(
   conversationsRepliesResponse: ConversationsRepliesResponse
 ): boolean {
-  const botIds = conversationsRepliesResponse.messages.map(message => message.hasOwnProperty("bot_id") ? message.bot_id : null).filter(id => id !== null);
+  const botIds = conversationsRepliesResponse.messages
+    .map((message) =>
+      message.hasOwnProperty("bot_id") ? message.bot_id : null
+    )
+    .filter((id) => id !== null);
 
   if (botIds.length === 0 || typeof botIds[0] !== "string") {
     return false;
@@ -309,7 +313,9 @@ function isBotReplyInThread(
 function getValidUser(
   conversationsRepliesResponse: ConversationsRepliesResponse
 ): string | null {
-  const users = conversationsRepliesResponse.messages.map(message => message.hasOwnProperty("user") ? message.user : null).filter(user => user !== null);
+  const users = conversationsRepliesResponse.messages
+    .map((message) => (message.hasOwnProperty("user") ? message.user : null))
+    .filter((user) => user !== null);
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];
