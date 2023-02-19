@@ -96,6 +96,42 @@ interface RotateTokensResponse extends Response {
   exp: number;
 }
 
+interface ConversationsRepliesResponse extends Response {
+  messages: {
+    type: string;
+    user?: string;
+    bot_id?: string;
+    text: string;
+    thread_ts: string;
+    parent_user_id?: string;
+    reply_count?: number;
+    subscribed?: boolean;
+    last_read?: string;
+    unread_count?: number;
+    ts: string;
+  }[];
+  has_more: boolean;
+  response_metadata: {
+    next_cursor: string;
+  };
+}
+
+interface BotsInfoResponse extends Response {
+  bot: {
+    id: string;
+    deleted: boolean;
+    name: string;
+    updated: number;
+    app_id: string;
+    user_id: string;
+    icons: {
+      image_36: string;
+      image_48: string;
+      image_72: string;
+    };
+  };
+}
+
 class SlackApiClient {
   static readonly BASE_PATH = "https://slack.com/api/";
 
@@ -185,9 +221,14 @@ class SlackApiClient {
     return true;
   }
 
-  public postEphemeral(channel: string, text: string, user: string, blocks: (Block | {})[] = null): void {
+  public postEphemeral(
+    channel: string,
+    text: string,
+    user: string,
+    blocks: (Block | {})[] = null
+  ): void {
     const endPoint = SlackApiClient.BASE_PATH + "chat.postEphemeral";
-    var payload: {} = {
+    let payload: {} = {
       channel,
       text,
       user,
@@ -381,14 +422,17 @@ class SlackApiClient {
   }
 
   public createAppsManifest(
-    appsManifest: AppsManifest,
+    appsManifest: AppsManifest
   ): CreateAppsManifestResponse {
     const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.create";
     const manifest = JSON.stringify(appsManifest);
     let payload: {} = {};
-    payload = { ...payload, manifest};
+    payload = { ...payload, manifest };
 
-    const response = this.invokeAPI(endPoint, payload) as CreateAppsManifestResponse;
+    const response = this.invokeAPI(
+      endPoint,
+      payload
+    ) as CreateAppsManifestResponse;
 
     if (!response.ok) {
       throw new Error(
@@ -403,16 +447,19 @@ class SlackApiClient {
 
   public updateAppsManifest(
     app_id: string,
-    appsManifest: AppsManifest,
+    appsManifest: AppsManifest
   ): UpdateManifestResponse {
     const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.update";
     const manifest = JSON.stringify(appsManifest);
     let payload: {} = {
-      app_id
+      app_id,
     };
     payload = { ...payload, manifest };
 
-    const response = this.invokeAPI(endPoint, payload) as UpdateManifestResponse;
+    const response = this.invokeAPI(
+      endPoint,
+      payload
+    ) as UpdateManifestResponse;
 
     if (!response.ok) {
       throw new Error(
@@ -425,12 +472,10 @@ class SlackApiClient {
     return response;
   }
 
-  public deleteAppsManifest(
-    app_id: string,
-  ): Response {
+  public deleteAppsManifest(app_id: string): Response {
     const endPoint = SlackApiClient.BASE_PATH + "apps.manifest.delete";
-    let payload: {} = {
-      app_id
+    const payload: {} = {
+      app_id,
     };
 
     const response = this.invokeAPI(endPoint, payload) as Response;
@@ -446,12 +491,10 @@ class SlackApiClient {
     return response;
   }
 
-  public rotateTokens(
-    refresh_token: string,
-  ): RotateTokensResponse {
+  public rotateTokens(refresh_token: string): RotateTokensResponse {
     const endPoint = SlackApiClient.BASE_PATH + "tooling.tokens.rotate";
-    let payload: {} = {
-      refresh_token
+    const payload: {} = {
+      refresh_token,
     };
 
     const response = this.invokeAPI(endPoint, payload) as RotateTokensResponse;
@@ -459,6 +502,57 @@ class SlackApiClient {
     if (!response.ok) {
       throw new Error(
         `roteate tokens faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  /**
+   * @see https://api.slack.com/methods/conversations.replies
+   */
+  public conversationsReplies(
+    channel: string,
+    ts: string
+  ): ConversationsRepliesResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "conversations.replies";
+    const payload: {} = {
+      channel,
+      ts,
+    };
+
+    const response = this.invokeAPI(
+      endPoint,
+      payload
+    ) as ConversationsRepliesResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `conversations replies faild. response: ${JSON.stringify(
+          response
+        )}, payload: ${JSON.stringify(payload)}`
+      );
+    }
+
+    return response;
+  }
+
+  /**
+   * @see https://api.slack.com/methods/bots.info
+   */
+  public infoBots(bot: string): BotsInfoResponse {
+    const endPoint = SlackApiClient.BASE_PATH + "bots.info";
+    const payload: {} = {
+      bot,
+    };
+
+    const response = this.invokeAPI(endPoint, payload) as BotsInfoResponse;
+
+    if (!response.ok) {
+      throw new Error(
+        `bots info faild. response: ${JSON.stringify(
           response
         )}, payload: ${JSON.stringify(payload)}`
       );
@@ -584,6 +678,8 @@ class SlackApiClient {
     switch (true) {
       case /(.)*conversations\.history$/.test(endPoint):
       case /(.)*tooling\.tokens\.rotate$/.test(endPoint):
+      case /(.)*conversations\.replies$/.test(endPoint):
+      case /(.)*bots\.info$/.test(endPoint):
         return "get";
       default:
         return "post";
@@ -599,4 +695,4 @@ class SlackApiClient {
   }
 }
 
-export { SlackApiClient };
+export { SlackApiClient, ConversationsRepliesResponse };
