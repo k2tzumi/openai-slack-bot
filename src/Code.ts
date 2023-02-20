@@ -416,13 +416,17 @@ const executeReplyTalk = (): void => {
 
     const openAiClient = new OpenAiClient(credential.apiKey);
     const response = openAiClient.completions(parameter.messages.join("\n"));
+    let replay = response.choices[0].text;
+
+    if (replay === "") {
+      JobBroker.enqueueAsyncJob(asyncLogging, {
+        response: response,
+      });
+      replay = "I don't know what you're talking about for a second. :smirk:";
+    }
 
     const client = new SlackApiClient(handler.token);
-    client.chatPostMessage(
-      parameter.channel,
-      response.choices[0].text,
-      parameter.thread_ts
-    );
+    client.chatPostMessage(parameter.channel, replay, parameter.thread_ts);
   }, "executeReplyTalk");
 };
 
@@ -434,7 +438,3 @@ function makePassphraseSeeds(user_id: string): string {
 }
 
 export { doPost, doGet };
-  function elseif(arg0: boolean) {
-    throw new Error("Function not implemented.");
-  }
-
