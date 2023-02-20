@@ -20,11 +20,11 @@ type ButtonAction = Slack.Interactivity.ButtonAction;
 type InteractionResponse = Slack.Interactivity.InteractionResponse;
 type AppMentionEvent =
   | Slack.CallbackEvent.AppMentionEvent
-  | Record<string, any>;
-type MessageEvent = Slack.CallbackEvent.MessageEvent | Record<string, any>;
+  | Record<never, never>;
+type MessageEvent = Slack.CallbackEvent.MessageEvent | Record<never, never>;
 type MessageRepliedEvent =
   | Slack.CallbackEvent.MessageRepliedEvent
-  | Record<string, any>;
+  | Record<never, never>;
 type AppsManifest = Slack.Tools.AppsManifest;
 
 const properties = PropertiesService.getScriptProperties();
@@ -50,7 +50,6 @@ function initializeOAuth2Handler(): void {
 /**
  * Authorizes and makes a request to the Slack API.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function doGet(request: DoGet): HtmlOutput {
   initializeOAuth2Handler();
 
@@ -115,8 +114,8 @@ function configuration(data): HtmlOutput {
 }
 
 function createAppsManifest(
-  redirectUrls: string[] = null,
-  requestUrl: string = null
+  redirectUrls: string[] = [],
+  requestUrl = ""
 ): AppsManifest {
   const appsManifest = {
     display_information: {
@@ -124,7 +123,7 @@ function createAppsManifest(
     },
   } as AppsManifest;
 
-  if (redirectUrls !== null && requestUrl !== null) {
+  if (redirectUrls.length !== 0 && requestUrl !== "") {
     appsManifest.features = {
       bot_user: {
         display_name: "open-ai",
@@ -141,7 +140,7 @@ function createAppsManifest(
     appsManifest.settings = {
       event_subscriptions: {
         request_url: requestUrl,
-        bot_events: ["app_mention", "message.channels"],
+        bot_events: ["app_mention", "message.channels", "message.groups"],
       },
       interactivity: {
         is_enabled: true,
@@ -154,12 +153,11 @@ function createAppsManifest(
 }
 
 const asyncLogging = (): void => {
-  JobBroker.consumeAsyncJob((parameter: Record<string, any>) => {
+  JobBroker.consumeAsyncJob((parameter: Record<never, never>) => {
     console.info(JSON.stringify(parameter));
   }, "asyncLogging");
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function doPost(e: DoPost): TextOutput {
   initializeOAuth2Handler();
   const slackCredentialStore = new SlackCredentialStore(properties);
@@ -281,7 +279,7 @@ const executeMessageRepliedEvent = (event: MessageRepliedEvent): void => {
         thread_ts,
         channel,
         user,
-        messages: [...messages, event.text],
+        messages,
       } as ReplyTalkParameter;
 
       JobBroker.enqueueAsyncJob(executeReplyTalk, replyTalkParameter);
@@ -432,7 +430,7 @@ function makePassphraseSeeds(user_id: string): string {
   const slackCredentialStore = new SlackCredentialStore(properties);
   const credentail = slackCredentialStore.getCredential();
 
-  return credentail.client_id + user_id + credentail.client_secret;
+  return credentail?.client_id + user_id + credentail?.client_secret;
 }
 
-export {};
+export { doPost, doGet };

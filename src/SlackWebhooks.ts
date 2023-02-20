@@ -6,7 +6,7 @@ type HTTPResponse = GoogleAppsScript.URL_Fetch.HTTPResponse;
 class SlackWebhooks {
   public constructor(private incomingWebhookUrl: string) {}
 
-  public invoke(payload: Record<string, never>): boolean {
+  public invoke(payload: Record<never, never>): boolean {
     let response: HTTPResponse;
 
     try {
@@ -46,12 +46,12 @@ class SlackWebhooks {
     }
   }
 
-  public sendText(text: string, thread_ts: string = null): boolean {
-    let payload: Record<string, never> = {
+  public sendText(text: string, thread_ts = ""): boolean {
+    let payload: Record<never, never> = {
       text,
     };
 
-    if (thread_ts) {
+    if (thread_ts !== "") {
       payload = { ...payload, thread_ts };
     }
 
@@ -59,7 +59,7 @@ class SlackWebhooks {
   }
 
   private requestOptions(
-    payload: string | Record<string, never>
+    payload: string | Record<never, never>
   ): URLFetchRequestOptions {
     const options: URLFetchRequestOptions = {
       headers: this.requestHeader(),
