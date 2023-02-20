@@ -86,7 +86,7 @@ function doGet(request: DoGet): HtmlOutput {
   }
 }
 
-function configuration(data): HtmlOutput {
+function configuration(data: { [key: string]: string }): HtmlOutput {
   const slackConfigurator = new SlackConfigurator(data.token);
   const credentail = slackConfigurator.createApps(createAppsManifest());
   const slackCredentialStore = new SlackCredentialStore(properties);
@@ -434,3 +434,7 @@ function makePassphraseSeeds(user_id: string): string {
 }
 
 export { doPost, doGet };
+  function elseif(arg0: boolean) {
+    throw new Error("Function not implemented.");
+  }
+
