@@ -5,7 +5,6 @@ import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { ConversationsRepliesResponse, SlackApiClient } from "./SlackApiClient";
 import { OpenAiClient } from "./OpenAiClient";
-import { SlashCommandFunctionResponse } from "./SlashCommandHandler";
 import { UserCredentialStore, UserCredential } from "./UserCredentialStore";
 import { SlackCredentialStore } from "./SlackCredentialStore";
 import { SlackConfigurator } from "./SlackConfigurator";
@@ -16,7 +15,6 @@ type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 type DoPost = GoogleAppsScript.Events.DoPost;
 type DoGet = GoogleAppsScript.Events.DoGet;
-type Commands = Slack.SlashCommand.Commands;
 type BlockActions = Slack.Interactivity.BlockActions;
 type ButtonAction = Slack.Interactivity.ButtonAction;
 type InteractionResponse = Slack.Interactivity.InteractionResponse;
@@ -52,6 +50,7 @@ function initializeOAuth2Handler(): void {
 /**
  * Authorizes and makes a request to the Slack API.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function doGet(request: DoGet): HtmlOutput {
   initializeOAuth2Handler();
 
@@ -160,6 +159,7 @@ const asyncLogging = (): void => {
   }, "asyncLogging");
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function doPost(e: DoPost): TextOutput {
   initializeOAuth2Handler();
   const slackCredentialStore = new SlackCredentialStore(properties);
@@ -190,7 +190,7 @@ function doPost(e: DoPost): TextOutput {
   throw new Error(`No performed handler, request: ${JSON.stringify(e)}`);
 }
 
-const executeButton = (blockActions: BlockActions): {} => {
+const executeButton = (blockActions: BlockActions): Record<never, never> => {
   const action = blockActions.actions[0] as ButtonAction;
   const response: InteractionResponse = {};
 
@@ -346,7 +346,7 @@ const executeMessageEvent = (
   }
 };
 
-function createInputApoKeyBlocks(): {}[] {
+function createInputApoKeyBlocks(): Record<never, never>[] {
   return [
     {
       type: "section",

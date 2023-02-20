@@ -4,9 +4,11 @@ import { Slack } from "./slack/types/index.d";
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type Interaction = Slack.Interactivity.Interaction;
 type BlockActions = Slack.Interactivity.BlockActions;
-type BlockActionsFunction = (blockActions: BlockActions) => {};
+type BlockActionsFunction = (
+  blockActions: BlockActions
+) => Record<never, never>;
 type InteractivityFunction =
-  | ((interaction: Interaction) => {} | void)
+  | ((interaction: Interaction) => Record<never, never> | void)
   | BlockActionsFunction;
 
 class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
@@ -24,7 +26,9 @@ class InteractivityHandler extends SlackBaseHandler<InteractivityFunction> {
     return { performed: false, output: null };
   }
 
-  private bindInteractivity(interaction: Interaction): {} | void {
+  private bindInteractivity(
+    interaction: Interaction
+  ): Record<never, never> | void {
     const { type, token } = interaction;
     this.validateVerificationToken(token);
 

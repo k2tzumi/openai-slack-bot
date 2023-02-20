@@ -4,7 +4,9 @@ import { SlackBaseHandler } from "./SlackBaseHandler";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type CallbackEvent = Slack.CallbackEvent.EventBase;
-type CallbackEventFunction = (event: CallbackEvent) => {} | null | void;
+type CallbackEventFunction = (
+  event: CallbackEvent
+) => Record<never, never> | null | void;
 
 interface OuterEvent {
   token: string;
@@ -51,7 +53,7 @@ class CallbackEventHandler extends SlackBaseHandler<CallbackEventFunction> {
     return { performed: false, output: null };
   }
 
-  private bindEvent(outerEvent: OuterEvent): {} {
+  private bindEvent(outerEvent: OuterEvent): Record<never, never> {
     const { token, event_id, event_time, event } = outerEvent;
 
     this.validateVerificationToken(token);

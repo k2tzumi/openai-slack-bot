@@ -32,6 +32,7 @@ interface Block {
 }
 
 // type=divider
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DividerBlock = Block;
 
 interface ContextBlock extends Block {
@@ -39,6 +40,7 @@ interface ContextBlock extends Block {
   elements: (TextCompositionObject | Record<never, never>)[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ActionsBlock extends Block {
   // type=actions
   elements: Record<never, never>[];
