@@ -7,7 +7,7 @@ type Commands = Slack.SlashCommand.Commands;
 interface SlashCommandFunctionResponse {
   response_type: string;
   text?: string;
-  blocks?: {};
+  blocks?: object;
 }
 type SlashCommandFunction = (
   commands: Commands

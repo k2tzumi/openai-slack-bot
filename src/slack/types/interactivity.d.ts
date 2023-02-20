@@ -42,7 +42,7 @@ declare namespace Slack {
         subtype: string;
         text: string;
         bot_id: string;
-        blocks: {}[];
+        blocks: object[];
         edited: { user: string; ts: string };
         ts: string;
       };
@@ -80,7 +80,7 @@ declare namespace Slack {
     interface InteractionResponse {
       replace_original?: string;
       delete_original?: string;
-      blocks?: {};
+      blocks?: object;
       text?: string;
       response_type?: string;
     }

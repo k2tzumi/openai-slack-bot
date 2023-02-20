@@ -38,7 +38,7 @@ class OpenAiClient {
 
   public listModels(): Models {
     const endPoint = OpenAiClient.BASE_PATH + "models";
-    const payload: {} = {};
+    const payload: Record<never, never> = {};
 
     const response: Models = this.invokeAPI(endPoint, payload);
 
@@ -47,7 +47,7 @@ class OpenAiClient {
 
   public completions(prompt: string): CompletionsResponse {
     const endPoint = OpenAiClient.BASE_PATH + "completions";
-    const payload: {} = {
+    const payload: Record<never, never> = {
       model: "text-davinci-003",
       prompt: prompt,
       temperature: 0,
@@ -61,6 +61,7 @@ class OpenAiClient {
 
   private postRequestHeader() {
     return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       "content-type": "application/json; charset=UTF-8",
       Authorization: `Bearer ${this.apiKey}`,
     };
@@ -68,12 +69,15 @@ class OpenAiClient {
 
   private getRequestHeader() {
     return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       "content-type": "application/x-www-form-urlencoded",
       Authorization: `Bearer ${this.apiKey}`,
     };
   }
 
-  private postRequestOptions(payload: string | {}): URLFetchRequestOptions {
+  private postRequestOptions(
+    payload: string | Record<never, never>
+  ): URLFetchRequestOptions {
     const options: URLFetchRequestOptions = {
       method: "post",
       headers: this.postRequestHeader(),
@@ -99,7 +103,7 @@ class OpenAiClient {
    * @param options
    * @throws NetworkAccessError
    */
-  private invokeAPI(endPoint: string, payload: {}): any {
+  private invokeAPI(endPoint: string, payload: Record<never, never>): any {
     let response: HTTPResponse;
 
     try {
@@ -145,7 +149,10 @@ class OpenAiClient {
     }
   }
 
-  private formUrlEncoded(endPoint: string, payload: {}): string {
+  private formUrlEncoded(
+    endPoint: string,
+    payload: Record<never, never>
+  ): string {
     const query = Object.entries<string>(payload)
       .map(([key, value]) => `${key}=${encodeURI(value)}`)
       .join("&");

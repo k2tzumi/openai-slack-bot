@@ -37,7 +37,9 @@ abstract class SlackBaseHandler<T> {
     }
   }
 
-  protected convertJSONOutput(response: {} | null | void): TextOutput {
+  protected convertJSONOutput(
+    response: Record<never, never> | null | void
+  ): TextOutput {
     if (response) {
       return ContentService.createTextOutput(
         JSON.stringify(response)
