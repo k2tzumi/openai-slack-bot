@@ -243,7 +243,7 @@ const executeAppMentionEvent = (event: AppMentionEvent): void => {
   const credential = store.getUserCredential(event.user);
   const properties = PropertiesService.getScriptProperties();
   const START_REACTION: string =
-  properties.getProperty("START_REACTION") || "robot_face";
+    properties.getProperty("START_REACTION") || "robot_face";
 
   if (credential) {
     if (slackApiClient.addReactions(event.channel, START_REACTION, event.ts)) {
@@ -391,41 +391,42 @@ function createInputApoKeyBlocks(): Record<never, never>[] {
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
   JobBroker.consumeAsyncJob((event: AppMentionEvent) => {
-    const store = new UserCredentialStore(
-      PropertiesService.getUserProperties(),
-      makePassphraseSeeds(event.user)
-    );
-
-    const credential = store.getUserCredential(event.user);
-
-    const openAiClient = new OpenAiClient(credential.apiKey);
-    const response = openAiClient.completions(event.text);
+    const replay = callOpenAi(event.user, event.text);
 
     const client = new SlackApiClient(handler.token);
-    client.chatPostMessage(event.channel, response.choices[0].text, event.ts);
+    client.chatPostMessage(event.channel, replay, event.ts);
   }, "executeStartTalk");
 };
 
-const executeReplyTalk = (): void => {
-  initializeOAuth2Handler();
-  JobBroker.consumeAsyncJob((parameter: ReplyTalkParameter) => {
-    const store = new UserCredentialStore(
-      PropertiesService.getUserProperties(),
-      makePassphraseSeeds(parameter.user)
-    );
+function callOpenAi(user: string, prompt: string): string {
+  const store = new UserCredentialStore(
+    PropertiesService.getUserProperties(),
+    makePassphraseSeeds(user)
+  );
 
-    const credential = store.getUserCredential(parameter.user);
+  const credential = store.getUserCredential(user);
 
-    const openAiClient = new OpenAiClient(credential.apiKey);
-    const response = openAiClient.completions(parameter.messages.join("\n"));
-    let replay = response.choices[0].text;
+  const openAiClient = new OpenAiClient(credential.apiKey);
+  const response = openAiClient.completions(prompt);
 
+  if (!response.hasOwnProperty("choices")) {
+    const replay = response.choices[0].text;
     if (replay === "") {
       JobBroker.enqueueAsyncJob(asyncLogging, {
         response: response,
       });
-      replay = "I don't know what you're talking about for a second. :smirk:";
+      return "I don't know what you're talking about for a second. :smirk:";
     }
+    return replay;
+  } else {
+    return "Oops. Something went wrong. :cold_sweat:";
+  }
+}
+
+const executeReplyTalk = (): void => {
+  initializeOAuth2Handler();
+  JobBroker.consumeAsyncJob((parameter: ReplyTalkParameter) => {
+    const replay = callOpenAi(parameter.user, parameter.messages.join("\n"));
 
     const client = new SlackApiClient(handler.token);
     client.chatPostMessage(parameter.channel, replay, parameter.thread_ts);

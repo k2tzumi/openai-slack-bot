@@ -31,6 +31,15 @@ interface CompletionsResponse {
   };
 }
 
+interface ErrorResponse {
+  error: {
+    message: string;
+    type: string;
+    param: string;
+    code: string;
+  };
+}
+
 class OpenAiClient {
   static readonly BASE_PATH = "https://api.openai.com/v1/";
 
@@ -45,7 +54,7 @@ class OpenAiClient {
     return response;
   }
 
-  public completions(prompt: string): CompletionsResponse {
+  public completions(prompt: string): CompletionsResponse | ErrorResponse {
     const endPoint = OpenAiClient.BASE_PATH + "completions";
     const payload: Record<never, never> = {
       model: "text-davinci-003",
@@ -54,9 +63,19 @@ class OpenAiClient {
       max_tokens: 1000,
     };
 
-    const response: CompletionsResponse = this.invokeAPI(endPoint, payload);
+    try {
+      const response: CompletionsResponse = this.invokeAPI(endPoint, payload);
 
-    return response;
+      return response;
+    } catch (e) {
+      if (e instanceof NetworkAccessError) {
+        const error = JSON.parse(e.e) as ErrorResponse;
+
+        return error;
+      }
+
+      throw e;
+    }
   }
 
   private postRequestHeader() {
