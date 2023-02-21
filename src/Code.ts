@@ -27,8 +27,6 @@ type MessageRepliedEvent =
   | Record<never, never>;
 type AppsManifest = Slack.Tools.AppsManifest;
 
-const properties = PropertiesService.getScriptProperties();
-
 let handler: OAuth2Handler;
 
 const handleCallback = (request): HtmlOutput => {
@@ -37,6 +35,7 @@ const handleCallback = (request): HtmlOutput => {
 };
 
 function initializeOAuth2Handler(): void {
+  const properties = PropertiesService.getScriptProperties();
   const slackCredentialStore = new SlackCredentialStore(properties);
   const credential = slackCredentialStore.getCredential();
 
@@ -56,6 +55,7 @@ function doGet(request: DoGet): HtmlOutput {
   // Clear authentication by accessing with the get parameter `?logout=true`
   if (request.parameter.hasOwnProperty("logout")) {
     handler.clearService();
+    const properties = PropertiesService.getScriptProperties();
     const slackCredentialStore = new SlackCredentialStore(properties);
     slackCredentialStore.removeCredential();
     const slackConfigurator = new SlackConfigurator();
@@ -89,6 +89,7 @@ function doGet(request: DoGet): HtmlOutput {
 function configuration(data: { [key: string]: string }): HtmlOutput {
   const slackConfigurator = new SlackConfigurator(data.token);
   const credentail = slackConfigurator.createApps(createAppsManifest());
+  const properties = PropertiesService.getScriptProperties();
   const slackCredentialStore = new SlackCredentialStore(properties);
 
   slackCredentialStore.setCredential(credentail);
@@ -160,6 +161,7 @@ const asyncLogging = (): void => {
 
 function doPost(e: DoPost): TextOutput {
   initializeOAuth2Handler();
+  const properties = PropertiesService.getScriptProperties();
   const slackCredentialStore = new SlackCredentialStore(properties);
   const credentail = slackCredentialStore.getCredential();
   const slackHandler = new SlackHandler(credentail.verification_token);
@@ -232,9 +234,6 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
   return {};
 };
 
-const START_REACTION: string =
-  properties.getProperty("START_REACTION") || "robot_face";
-
 const executeAppMentionEvent = (event: AppMentionEvent): void => {
   const slackApiClient = new SlackApiClient(handler.token);
   const store = new UserCredentialStore(
@@ -242,6 +241,9 @@ const executeAppMentionEvent = (event: AppMentionEvent): void => {
     makePassphraseSeeds(event.user)
   );
   const credential = store.getUserCredential(event.user);
+  const properties = PropertiesService.getScriptProperties();
+  const START_REACTION: string =
+  properties.getProperty("START_REACTION") || "robot_face";
 
   if (credential) {
     if (slackApiClient.addReactions(event.channel, START_REACTION, event.ts)) {
@@ -431,10 +433,11 @@ const executeReplyTalk = (): void => {
 };
 
 function makePassphraseSeeds(user_id: string): string {
+  const properties = PropertiesService.getScriptProperties();
   const slackCredentialStore = new SlackCredentialStore(properties);
   const credentail = slackCredentialStore.getCredential();
 
   return credentail?.client_id + user_id + credentail?.client_secret;
 }
 
-export { doPost, doGet };
+export { doPost, doGet, createInputApoKeyBlocks };
