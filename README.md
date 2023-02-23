@@ -40,8 +40,14 @@ https://developers.google.com/apps-script/concepts/deployments
 
 # How to use
 
-1. Join the channel for bot on Slack
-2. To send a message to bot, type `@open-ai` and enter the message content (e.g., `@open-ai Hello`)
-3. Bot will reply to your message in a thread (e.g., `Hello! I'm OpenAI. I'm happy to talk to you.`)
+This bot uses OpenAI's service to chat with AI on Slack. The usage is as follows.  
+
+1. Invite bots to your channel (e.g. /invite @open-ai)
+2. To send a message to bot, type `@open-ai` and enter the message content (e.g., `@open-ai Hello`)  
+Only for the first time, enter your OpenAI API Key. This is required for the bot to access OpenAI’s service.  
+To get an API Key, please visit this URL (and create an account if necessary).   
+https://platform.openai.com/account/api-keys  
+Once you enter your API Key, you can chat freely with the bot.
+3. The bot will reply to your message in a thread (e.g., `Hello! I'm OpenAI. I'm happy to talk to you.`)
 4. If you have more questions about the reply, send a message in that thread (e.g., `What do you like?`)
-5. Bot will answer with context of the conversation (e.g., `I like natural language processing and artificial intelligence technologies. What do you like?`)
+5. The bot will answer with the context of the conversation (e.g., `I like natural language processing and artificial intelligence technologies. What do you like?`)
