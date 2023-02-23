@@ -29,4 +29,7 @@ jobs:
       run: npm run lint
 
     - name: Test
-      run: npm test
+      run: npm test -- --coverage
+    
+    - uses: k1LoW/octocov-action@v0
+
