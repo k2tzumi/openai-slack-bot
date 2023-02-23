@@ -54,6 +54,11 @@ class OpenAiClient {
     return response;
   }
 
+  /**
+   * @see https://platform.openai.com/docs/api-reference/completions
+   * @param prompt 
+   * @returns 
+   */
   public completions(prompt: string): CompletionsResponse | ErrorResponse {
     const endPoint = OpenAiClient.BASE_PATH + "completions";
     const payload: Record<never, never> = {
