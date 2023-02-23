@@ -45,8 +45,8 @@ type TokenPayload = GoogleAppsScriptOAuth2.TokenPayload;
 type Credentials = Slack.Tools.Credentials;
 
 class OAuth2Handler {
-  public get token(): string {
-    const ACCESS_TOKEN: string = this.propertyStore.getProperty("ACCESS_TOKEN");
+  public get token(): string | null {
+    const ACCESS_TOKEN = this.propertyStore.getProperty("ACCESS_TOKEN");
 
     if (ACCESS_TOKEN !== null) {
       return ACCESS_TOKEN;
@@ -60,6 +60,8 @@ class OAuth2Handler {
         return token;
       }
     }
+
+    return null;
   }
 
   public get authorizationUrl(): string {
@@ -98,6 +100,12 @@ class OAuth2Handler {
     )}&client_id=${this.credentials.client_id}&redirect_uri=${
       this.authorizationUrl
     }`;
+  }
+
+  public get reInstallUrl(): string {
+    return `https://slack.com/oauth/v2/authorize?client_id=${
+      this.credentials.client_id
+    }&install_redirect=general&scope=${encodeURI(OAuth2Handler.SCOPE)}`;
   }
 
   public static readonly SCOPE =

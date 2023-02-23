@@ -288,9 +288,7 @@ class SlackApiClient {
     ) as ChatPostMessageResponse;
 
     if (!response.ok) {
-      console.error(`post message faild. response: ${JSON.stringify(
-        response
-      ));
+      console.info(`post message faild. response: ${JSON.stringify(response)}`);
       throw new Error(
         `post message faild. response: ${JSON.stringify(
           response

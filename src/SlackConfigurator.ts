@@ -56,7 +56,7 @@ class SlackConfigurator {
 
     const updateResponse = client.updateAppsManifest(this.app_id, appsManifest);
 
-    return updateResponse.ok;
+    return updateResponse.permissions_updated;
   }
 
   public deleteApps(): boolean {

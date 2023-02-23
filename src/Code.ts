@@ -15,6 +15,7 @@ type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
 type DoPost = GoogleAppsScript.Events.DoPost;
 type DoGet = GoogleAppsScript.Events.DoGet;
+type HtmlTemplate = GoogleAppsScript.HTML.HtmlTemplate;
 type BlockActions = Slack.Interactivity.BlockActions;
 type ButtonAction = Slack.Interactivity.ButtonAction;
 type InteractionResponse = Slack.Interactivity.InteractionResponse;
@@ -63,9 +64,37 @@ function doGet(request: DoGet): HtmlOutput {
     template.requestUrl = ScriptApp.getService().getUrl();
     return HtmlService.createHtmlOutput(template.evaluate());
   }
+  // Reinstall the Slack app by accessing it with the get parameter `?reinstall=true`
+  if (request.parameter.hasOwnProperty("reinstall")) {
+    const slackConfigurator = new SlackConfigurator();
+    const permissionsUpdated = slackConfigurator.updateApps(
+      createAppsManifest([handler.callbackURL], handler.requestURL)
+    );
+
+    let template: HtmlTemplate;
+    if (permissionsUpdated) {
+      template = HtmlService.createTemplate(
+        `You’ve changed the permission scopes your app uses. Please <a href="<?= reInstallUrl ?>" target="_parent">reinstall your app</a> for these changes to take effect.`
+      );
+      template.reInstallUrl = handler.reInstallUrl;
+    } else {
+      template = HtmlService.createTemplate(
+        `Reinstallation is complete.<br /><a href="<?= requestUrl ?>" target="_parent">refresh</a>.`
+      );
+      template.requestUrl = ScriptApp.getService().getUrl();
+    }
+    return HtmlService.createHtmlOutput(template.evaluate()).setTitle("");
+  }
 
   if (handler.verifyAccessToken()) {
-    return HtmlService.createHtmlOutput("OK!");
+    const template = HtmlService.createTemplate(
+      "OK!<br />" +
+        '<a href="<?!= reInstallUrl ?>" target="_parent" style="align-items:center;color:#000;background-color:#fff;border:1px solid #ddd;border-radius:4px;display:inline-flex;font-family:Lato, sans-serif;font-size:16px;font-weight:600;height:48px;justify-content:center;text-decoration:none;width:236px"><svg xmlns="http://www.w3.org/2000/svg" style="height:20px;width:20px;margin-right:12px" viewBox="0 0 122.8 122.8"><path d="M25.8 77.6c0 7.1-5.8 12.9-12.9 12.9S0 84.7 0 77.6s5.8-12.9 12.9-12.9h12.9v12.9zm6.5 0c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9v32.3c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V77.6z" fill="#e01e5a"></path><path d="M45.2 25.8c-7.1 0-12.9-5.8-12.9-12.9S38.1 0 45.2 0s12.9 5.8 12.9 12.9v12.9H45.2zm0 6.5c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H12.9C5.8 58.1 0 52.3 0 45.2s5.8-12.9 12.9-12.9h32.3z" fill="#36c5f0"></path><path d="M97 45.2c0-7.1 5.8-12.9 12.9-12.9s12.9 5.8 12.9 12.9-5.8 12.9-12.9 12.9H97V45.2zm-6.5 0c0 7.1-5.8 12.9-12.9 12.9s-12.9-5.8-12.9-12.9V12.9C64.7 5.8 70.5 0 77.6 0s12.9 5.8 12.9 12.9v32.3z" fill="#2eb67d"></path><path d="M77.6 97c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9-12.9-5.8-12.9-12.9V97h12.9zm0-6.5c-7.1 0-12.9-5.8-12.9-12.9s5.8-12.9 12.9-12.9h32.3c7.1 0 12.9 5.8 12.9 12.9s-5.8 12.9-12.9 12.9H77.6z" fill="#ecb22e"></path></svg>Reinstall to Slack</a>'
+    );
+    template.reInstallUrl = handler.requestURL + "?reinstall=true";
+    return HtmlService.createHtmlOutput(template.evaluate()).setTitle(
+      "Installation on Slack is complete"
+    );
   }
   if (request.parameter.hasOwnProperty("token")) {
     return configuration(request.parameter);
@@ -231,21 +260,18 @@ const executeButton = (blockActions: BlockActions): Record<never, never> => {
 };
 
 const executeAppMentionEvent = (event: AppMentionEvent): void => {
-  const slackApiClient = new SlackApiClient(handler.token);
   const store = new UserCredentialStore(
     PropertiesService.getUserProperties(),
     makePassphraseSeeds(event.user)
   );
   const credential = store.getUserCredential(event.user);
-  const properties = PropertiesService.getScriptProperties();
-  const START_REACTION: string =
-    properties.getProperty("START_REACTION") || "robot_face";
 
   if (credential) {
-    if (slackApiClient.addReactions(event.channel, START_REACTION, event.ts)) {
+    if (addReactions(event.channel, event.ts)) {
       JobBroker.enqueueAsyncJob(executeStartTalk, event);
     }
   } else {
+    const slackApiClient = new SlackApiClient(handler.token);
     slackApiClient.postEphemeral(
       event.channel,
       `Not exists credential.`,
@@ -272,7 +298,7 @@ const executeMessageRepliedEvent = (event: MessageRepliedEvent): void => {
   const response = slackApiClient.conversationsReplies(channel, thread_ts);
 
   if (isBotReplyInThread(response)) {
-    if (slackApiClient.addReactions(event.channel, START_REACTION, event.ts)) {
+    if (addReactions(event.channel, event.ts)) {
       const prevMessages = response.messages
         .sort((a, b) => Number(a.ts) - Number(b.ts))
         .map((message) => message.text);
@@ -309,6 +335,15 @@ function isBotReplyInThread(
   const slackConfigurator = new SlackConfigurator();
 
   return slackConfigurator.app_id === response.bot.app_id;
+}
+
+function addReactions(channel: string, timestamp: string): boolean {
+  const properties = PropertiesService.getScriptProperties();
+  const START_REACTION: string =
+    properties.getProperty("START_REACTION") || "robot_face";
+  const slackApiClient = new SlackApiClient(handler.token);
+
+  return slackApiClient.addReactions(channel, START_REACTION, timestamp);
 }
 
 function getValidUser(
@@ -422,10 +457,10 @@ function callOpenAi(user: string, prompt: string): string {
   const openAiClient = new OpenAiClient(credential.apiKey);
   const response = openAiClient.completions(prompt);
 
-  if (!response.hasOwnProperty("choices")) {
+  if (response.hasOwnProperty("choices")) {
     const replay = response.choices[0].text;
     if (replay === "") {
-      console.info(`No replay. response: ${response}`);
+      console.info(`No replay. response:${replay}`);
 
       return "I don't know what you're talking about for a second. :smirk:";
     }
