@@ -1,6 +1,6 @@
 {
   "name": "openai-slack-bot",
-  "version": "v0.0.0",
+  "version": "v0.0.1",
   "description": "",
   "private": true,
   "main": "src/Code.ts",
