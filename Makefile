@@ -28,12 +28,12 @@ push: .clasp.json lint
 .PHONY: deploy
 deploy: ## Deploy Google apps scripts
 deploy: .clasp.json
-	clasp deploy
+	clasp deploy -d "web app meta-version"
 
 .PHONY: redeploy
 redeploy: ## Re-Deploy Google apps scripts
 redeploy: .clasp.json
-	clasp deploy -i `clasp deployments | grep "web app meta-version" | cut -f2 -d" "` -d "web app meta-version"
+	clasp deploy --versionNumber `clasp versions | grep -o '^[0-9]*' | tail -n 1` -d "web app meta-version"
 
 .PHONY: open
 open: ## Open Google apps scripts
