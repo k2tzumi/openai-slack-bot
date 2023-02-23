@@ -37,3 +37,11 @@ Click Deploy.
 For more information, please refer to the official Google documentation.  
 https://developers.google.com/apps-script/concepts/deployments
 5. Run `make application` to open the deployed web app in your browser. Follow the instructions on the web app to install the Slack app and perform OAuth authentication. The web app will automatically upload the App manifest to Slack and configure the necessary settings for you.
+
+# How to use
+
+1. Join the channel for bot on Slack
+2. To send a message to bot, type `@open-ai` and enter the message content (e.g., `@open-ai Hello`)
+3. Bot will reply to your message in a thread (e.g., `Hello! I'm OpenAI. I'm happy to talk to you.`)
+4. If you have more questions about the reply, send a message in that thread (e.g., `What do you like?`)
+5. Bot will answer with context of the conversation (e.g., `I like natural language processing and artificial intelligence technologies. What do you like?`)
