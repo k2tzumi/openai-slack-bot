@@ -426,7 +426,7 @@ function createInputApoKeyBlocks(): Record<never, never>[] {
 
 const PRONMPT_PURPOSE = `You are a SlackBot that answers questions in Japanese.
 Please answer the current question accurately, taking into account your knowledge and the content of our previous conversations.
-If you need additional information to provide this accurate response, please ask a question with "Q:" at the beginning.`;
+If you need additional information to provide this accurate response, please ask a question.`;
 
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
