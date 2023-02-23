@@ -70,6 +70,7 @@ class OpenAiClient {
 
       return response;
     } catch (e) {
+      console.info(`Completions failed. response: ${JSON.stringify(e)}`);
       if (e instanceof NetworkAccessError) {
         const error = JSON.parse(e.e) as ErrorResponse;
 

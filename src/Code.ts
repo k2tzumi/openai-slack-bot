@@ -18,9 +18,7 @@ type DoGet = GoogleAppsScript.Events.DoGet;
 type BlockActions = Slack.Interactivity.BlockActions;
 type ButtonAction = Slack.Interactivity.ButtonAction;
 type InteractionResponse = Slack.Interactivity.InteractionResponse;
-type AppMentionEvent =
-  | Slack.CallbackEvent.AppMentionEvent
-  | Record<never, never>;
+type AppMentionEvent = Slack.CallbackEvent.AppMentionEvent;
 type MessageEvent = Slack.CallbackEvent.MessageEvent | Record<never, never>;
 type MessageRepliedEvent = Slack.CallbackEvent.MessageRepliedEvent;
 type AppsManifest = Slack.Tools.AppsManifest;
@@ -391,10 +389,23 @@ function createInputApoKeyBlocks(): Record<never, never>[] {
   ];
 }
 
+const PRONMPT_PURPOSE = `You are a SlackBot that answers questions in Japanese.
+Please answer the current question accurately, taking into account your knowledge and the content of our previous conversations.
+If you need additional information to provide this accurate response, please ask a question with "Q:" at the beginning.`;
+
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
   JobBroker.consumeAsyncJob((event: AppMentionEvent) => {
-    const replay = callOpenAi(event.user, event.text);
+    const prompt = `
+    ${PRONMPT_PURPOSE}
+
+    ### Current question:
+    ${event.text}
+    
+    ### Answer to the current question:
+    `;
+
+    const replay = callOpenAi(event.user, prompt);
 
     const client = new SlackApiClient(handler.token);
     client.chatPostMessage(event.channel, replay, event.ts);
@@ -408,16 +419,14 @@ function callOpenAi(user: string, prompt: string): string {
   );
 
   const credential = store.getUserCredential(user);
-
   const openAiClient = new OpenAiClient(credential.apiKey);
   const response = openAiClient.completions(prompt);
 
   if (!response.hasOwnProperty("choices")) {
     const replay = response.choices[0].text;
     if (replay === "") {
-      JobBroker.enqueueAsyncJob(asyncLogging, {
-        response: response,
-      });
+      console.info(`No replay. response: ${response}`);
+
       return "I don't know what you're talking about for a second. :smirk:";
     }
     return replay;
@@ -436,9 +445,7 @@ const executeReplyTalk = (): void => {
     const prevMessageText = prevMessages.map((m) => `- ${m}`).join("\n") || "";
 
     const prompt = `
-    You are a SlackBot that answers questions in Japanese.
-    Please answer the current question accurately, taking into account your knowledge and the content of our previous conversations.
-    If you need additional information to provide this accurate response, please ask a question with "Q:" at the beginning.
+    ${PRONMPT_PURPOSE}
     
     ### Previous Conversations:
     ${prevMessageText}
@@ -446,7 +453,7 @@ const executeReplyTalk = (): void => {
     ### Current question:
     ${parameter.text}
     
-    ### Answer to the current question
+    ### Answer to the current question:
     `;
     const replay = callOpenAi(parameter.user, prompt);
 
