@@ -4,10 +4,13 @@
 What is this?
 ==============================
 
-Slack bot that uses the [completes API](https://beta.openai.com/docs/api-reference/completions) to talk in a text-davinci-003 model.  
 
- I implemented a bot with Google apps script for Slack based on the following project.  
- https://github.com/openai/gpt-discord-bot
+This is a Slack bot that uses OpenAI's service to chat with AI on Slack. You can have natural and engaging conversations with the bot using text-davinci-003 model, which is one of the most advanced natural language models available. The bot can answer your questions, generate texts, and have fun with you.
+
+I created this bot using Google apps script for Slack, which is a simple and convenient way to run scripts on the cloud without setting up servers or databases. You can use this bot by inviting it to your channel and sending messages to it.
+
+This project is a reimplementation of the following bot for discord, adapted for Slack:  
+https://github.com/openai/gpt-discord-bot
 
 # Installation
 
