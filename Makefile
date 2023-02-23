@@ -7,6 +7,7 @@ help:
 .clasp.json:
 	make login
 	clasp create --title openai-slack-bot --type webapp --rootDir ./src
+	mv src/.clasp.json .
 	clasp setting fileExtension ts
 	# clasp setting filePushOrder
 	sed -i -e 's/}/,"filePushOrder":["src\/OAuth2Handler.ts","src\/SlackBaseHandler.ts","src\/BaseError.ts"]}/' .clasp.json
