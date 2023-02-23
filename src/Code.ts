@@ -22,9 +22,7 @@ type AppMentionEvent =
   | Slack.CallbackEvent.AppMentionEvent
   | Record<never, never>;
 type MessageEvent = Slack.CallbackEvent.MessageEvent | Record<never, never>;
-type MessageRepliedEvent =
-  | Slack.CallbackEvent.MessageRepliedEvent
-  | Record<never, never>;
+type MessageRepliedEvent = Slack.CallbackEvent.MessageRepliedEvent;
 type AppsManifest = Slack.Tools.AppsManifest;
 
 let handler: OAuth2Handler;
@@ -263,25 +261,30 @@ interface ReplyTalkParameter {
   thread_ts: string;
   channel: string;
   user: string;
-  messages: string[];
+  text: string;
+  prevMessages: string[];
 }
 
 const executeMessageRepliedEvent = (event: MessageRepliedEvent): void => {
   const thread_ts = event.thread_ts;
   const channel = event.channel;
+  const text = event.text;
 
   const slackApiClient = new SlackApiClient(handler.token);
   const response = slackApiClient.conversationsReplies(channel, thread_ts);
 
   if (isBotReplyInThread(response)) {
     if (slackApiClient.addReactions(event.channel, START_REACTION, event.ts)) {
-      const messages = response.messages.map((message) => message.text);
+      const prevMessages = response.messages
+        .sort((a, b) => Number(a.ts) - Number(b.ts))
+        .map((message) => message.text);
       const user = getValidUser(response);
       const replyTalkParameter = {
         thread_ts,
         channel,
         user,
-        messages,
+        text,
+        prevMessages,
       } as ReplyTalkParameter;
 
       JobBroker.enqueueAsyncJob(executeReplyTalk, replyTalkParameter);
@@ -426,7 +429,26 @@ function callOpenAi(user: string, prompt: string): string {
 const executeReplyTalk = (): void => {
   initializeOAuth2Handler();
   JobBroker.consumeAsyncJob((parameter: ReplyTalkParameter) => {
-    const replay = callOpenAi(parameter.user, parameter.messages.join("\n"));
+    const prevMessages =
+      parameter.prevMessages.length < 5
+        ? parameter.prevMessages.slice(1, -1)
+        : parameter.prevMessages.slice(-5, -1);
+    const prevMessageText = prevMessages.map((m) => `- ${m}`).join("\n") || "";
+
+    const prompt = `
+    You are a SlackBot that answers questions in Japanese.
+    Please answer the current question accurately, taking into account your knowledge and the content of our previous conversations.
+    If you need additional information to provide this accurate response, please ask a question with "Q:" at the beginning.
+    
+    ### Previous Conversations:
+    ${prevMessageText}
+    
+    ### Current question:
+    ${parameter.text}
+    
+    ### Answer to the current question
+    `;
+    const replay = callOpenAi(parameter.user, prompt);
 
     const client = new SlackApiClient(handler.token);
     client.chatPostMessage(parameter.channel, replay, parameter.thread_ts);

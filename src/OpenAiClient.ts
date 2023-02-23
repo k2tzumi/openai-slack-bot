@@ -59,7 +59,9 @@ class OpenAiClient {
     const payload: Record<never, never> = {
       model: "text-davinci-003",
       prompt: prompt,
-      temperature: 0,
+      temperature: 0.5,
+      top_p: 0.5,
+      frequency_penalty: 0.9,
       max_tokens: 1000,
     };
 
