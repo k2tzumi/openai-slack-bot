@@ -431,10 +431,12 @@ function createInputApoKeyBlocks(): Record<never, never>[] {
   ];
 }
 
-const SYSTEM_PROMPT = `You are an excellent Slack bot.
+const SYSTEM_PROMPT = `You are a helpful Slack bot assistant!
 Please answer the current question accurately, taking into account your knowledge and the content of our previous conversations.
 If you need additional information to provide this accurate response, please ask a question.
-Please use Slack's markdown notation when dealing with code and URLs in your responses.`;
+Please use Slack's markdown notation when dealing with code and URLs in your responses.
+Knowledge cutoff: 0.9
+Current date: ${new Date().toISOString()}`;
 
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
