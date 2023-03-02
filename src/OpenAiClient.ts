@@ -19,7 +19,8 @@ interface CompletionsResponse {
   created: number;
   model: string;
   choices: {
-    text: string;
+    text?: string;
+    message?: Message;
     index: number;
     logprobs: number | null;
     finish_reason: string;
@@ -40,6 +41,17 @@ interface ErrorResponse {
   };
 }
 
+interface Message {
+  role: RoleType;
+  content: string;
+}
+
+enum RoleType {
+  User = "user",
+  Assistant = "assistant",
+  System = "system",
+}
+
 class OpenAiClient {
   static readonly BASE_PATH = "https://api.openai.com/v1/";
 
@@ -56,14 +68,14 @@ class OpenAiClient {
 
   /**
    * @see https://platform.openai.com/docs/api-reference/completions
-   * @param prompt 
-   * @returns 
+   * @param prompt
+   * @returns
    */
-  public completions(prompt: string): CompletionsResponse | ErrorResponse {
+  public completions(messages: Message[]): CompletionsResponse | ErrorResponse {
     const endPoint = OpenAiClient.BASE_PATH + "completions";
     const payload: Record<never, never> = {
-      model: "text-davinci-003",
-      prompt: prompt,
+      model: "gpt-3.5-turbo",
+      messages: messages,
       temperature: 0.5,
       top_p: 0.5,
       frequency_penalty: 0.9,
@@ -188,4 +200,4 @@ class OpenAiClient {
   }
 }
 
-export { OpenAiClient };
+export { OpenAiClient, Message, RoleType };
