@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.3](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.2...v0.0.3) - 2023-03-02
+### Other Changes
+- Support ChatGPT API by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/10
+
 ## [v0.0.2](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.1...v0.0.2) - 2023-02-23
 ### Fix bug 🐛
 - Fix make .clasp.json by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/9
