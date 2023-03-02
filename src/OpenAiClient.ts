@@ -19,7 +19,8 @@ interface CompletionsResponse {
   created: number;
   model: string;
   choices: {
-    text: string;
+    text?: string;
+    message?: Message;
     index: number;
     logprobs: number | null;
     finish_reason: string;
@@ -40,6 +41,17 @@ interface ErrorResponse {
   };
 }
 
+interface Message {
+  role: RoleType;
+  content: string;
+}
+
+enum RoleType {
+  User = "user",
+  Assistant = "assistant",
+  System = "system",
+}
+
 class OpenAiClient {
   static readonly BASE_PATH = "https://api.openai.com/v1/";
 
@@ -56,13 +68,13 @@ class OpenAiClient {
 
   /**
    * @see https://platform.openai.com/docs/api-reference/completions
-   * @param prompt 
-   * @returns 
+   * @param prompt
+   * @returns
    */
   public completions(prompt: string): CompletionsResponse | ErrorResponse {
     const endPoint = OpenAiClient.BASE_PATH + "completions";
     const payload: Record<never, never> = {
-      model: "text-davinci-003",
+      model: "gpt-3.5-turbo",
       prompt: prompt,
       temperature: 0.5,
       top_p: 0.5,
@@ -76,6 +88,40 @@ class OpenAiClient {
       return response;
     } catch (e) {
       console.error(`Completions failed. response: ${JSON.stringify(e)}`);
+      if (e instanceof NetworkAccessError) {
+        const error = JSON.parse(e.e) as ErrorResponse;
+
+        return error;
+      }
+
+      throw e;
+    }
+  }
+
+  /**
+   * @see https://platform.openai.com/docs/guides/chat
+   * @param messages
+   * @returns
+   */
+  public chatCompletions(
+    messages: Message[]
+  ): CompletionsResponse | ErrorResponse {
+    const endPoint = OpenAiClient.BASE_PATH + "chat/completions";
+    const payload: Record<never, never> = {
+      model: "gpt-3.5-turbo",
+      messages: messages,
+      temperature: 0.5,
+      top_p: 0.5,
+      frequency_penalty: 0.9,
+      max_tokens: 1000,
+    };
+
+    try {
+      const response: CompletionsResponse = this.invokeAPI(endPoint, payload);
+
+      return response;
+    } catch (e) {
+      console.error(`Chat completions failed. response: ${JSON.stringify(e)}`);
       if (e instanceof NetworkAccessError) {
         const error = JSON.parse(e.e) as ErrorResponse;
 
@@ -188,4 +234,4 @@ class OpenAiClient {
   }
 }
 
-export { OpenAiClient };
+export { OpenAiClient, Message, RoleType };

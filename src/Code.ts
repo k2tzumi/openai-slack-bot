@@ -4,7 +4,7 @@ import { OAuth2Handler } from "./OAuth2Handler";
 import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { ConversationsRepliesResponse, SlackApiClient } from "./SlackApiClient";
-import { OpenAiClient } from "./OpenAiClient";
+import { OpenAiClient, Message, RoleType } from "./OpenAiClient";
 import { UserCredentialStore, UserCredential } from "./UserCredentialStore";
 import { SlackCredentialStore } from "./SlackCredentialStore";
 import { SlackConfigurator } from "./SlackConfigurator";
@@ -286,7 +286,7 @@ interface ReplyTalkParameter {
   channel: string;
   user: string;
   text: string;
-  prevMessages: string[];
+  prevMessages: Message[];
 }
 
 const executeMessageRepliedEvent = (event: MessageRepliedEvent): void => {
@@ -299,9 +299,16 @@ const executeMessageRepliedEvent = (event: MessageRepliedEvent): void => {
 
   if (isBotReplyInThread(response)) {
     if (addReactions(event.channel, event.ts)) {
-      const prevMessages = response.messages
+      const prevMessages: Message[] = response.messages
         .sort((a, b) => Number(a.ts) - Number(b.ts))
-        .map((message) => message.text);
+        .map((message) => {
+          return {
+            role: message.hasOwnProperty("bot_id")
+              ? RoleType.Assistant
+              : RoleType.User,
+            content: message.text,
+          };
+        });
       const user = getValidUser(response);
       const replyTalkParameter = {
         thread_ts,
@@ -424,30 +431,35 @@ function createInputApoKeyBlocks(): Record<never, never>[] {
   ];
 }
 
-const PRONMPT_PURPOSE = `You are a SlackBot that answers questions in Japanese.
+const SYSTEM_PROMPT = `You are a helpful Slack bot assistant!
 Please answer the current question accurately, taking into account your knowledge and the content of our previous conversations.
-If you need additional information to provide this accurate response, please ask a question.`;
+If you need additional information to provide this accurate response, please ask a question.
+Please use Slack's markdown notation when dealing with code and URLs in your responses.
+Knowledge cutoff: 0.9
+Current date: ${new Date().toISOString()}`;
 
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
   JobBroker.consumeAsyncJob((event: AppMentionEvent) => {
-    const prompt = `
-    ${PRONMPT_PURPOSE}
+    const messages: Message[] = [
+      {
+        role: RoleType.System,
+        content: SYSTEM_PROMPT,
+      },
+      {
+        role: RoleType.User,
+        content: event.text,
+      },
+    ];
 
-    ### Current question:
-    ${event.text}
-    
-    ### Answer to the current question:
-    `;
-
-    const replay = callOpenAi(event.user, prompt);
+    const replay = callOpenAi(event.user, messages);
 
     const client = new SlackApiClient(handler.token);
     client.chatPostMessage(event.channel, replay, event.ts);
   }, "executeStartTalk");
 };
 
-function callOpenAi(user: string, prompt: string): string {
+function callOpenAi(user: string, messages: Message[]): string {
   const store = new UserCredentialStore(
     PropertiesService.getUserProperties(),
     makePassphraseSeeds(user)
@@ -455,10 +467,10 @@ function callOpenAi(user: string, prompt: string): string {
 
   const credential = store.getUserCredential(user);
   const openAiClient = new OpenAiClient(credential.apiKey);
-  const response = openAiClient.completions(prompt);
+  const response = openAiClient.chatCompletions(messages);
 
   if (response.hasOwnProperty("choices")) {
-    const replay = response.choices[0].text;
+    const replay = response.choices[0].message.content;
     if (replay === "") {
       console.info(`No replay. response:${replay}`);
 
@@ -473,24 +485,13 @@ function callOpenAi(user: string, prompt: string): string {
 const executeReplyTalk = (): void => {
   initializeOAuth2Handler();
   JobBroker.consumeAsyncJob((parameter: ReplyTalkParameter) => {
-    const prevMessages =
-      parameter.prevMessages.length < 5
-        ? parameter.prevMessages.slice(1, -1)
-        : parameter.prevMessages.slice(-5, -1);
-    const prevMessageText = prevMessages.map((m) => `- ${m}`).join("\n") || "";
+    const messages: Message[] = [];
 
-    const prompt = `
-    ${PRONMPT_PURPOSE}
-    
-    ### Previous Conversations:
-    ${prevMessageText}
-    
-    ### Current question:
-    ${parameter.text}
-    
-    ### Answer to the current question:
-    `;
-    const replay = callOpenAi(parameter.user, prompt);
+    messages.push({ role: RoleType.System, content: SYSTEM_PROMPT });
+    messages.concat(...parameter.prevMessages);
+    messages.push({ role: RoleType.User, content: parameter.text });
+
+    const replay = callOpenAi(parameter.user, messages);
 
     const client = new SlackApiClient(handler.token);
     client.chatPostMessage(parameter.channel, replay, parameter.thread_ts);
