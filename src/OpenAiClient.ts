@@ -71,8 +71,42 @@ class OpenAiClient {
    * @param prompt
    * @returns
    */
-  public completions(messages: Message[]): CompletionsResponse | ErrorResponse {
+  public completions(prompt: string): CompletionsResponse | ErrorResponse {
     const endPoint = OpenAiClient.BASE_PATH + "completions";
+    const payload: Record<never, never> = {
+      model: "gpt-3.5-turbo",
+      prompt: prompt,
+      temperature: 0.5,
+      top_p: 0.5,
+      frequency_penalty: 0.9,
+      max_tokens: 1000,
+    };
+
+    try {
+      const response: CompletionsResponse = this.invokeAPI(endPoint, payload);
+
+      return response;
+    } catch (e) {
+      console.error(`Completions failed. response: ${JSON.stringify(e)}`);
+      if (e instanceof NetworkAccessError) {
+        const error = JSON.parse(e.e) as ErrorResponse;
+
+        return error;
+      }
+
+      throw e;
+    }
+  }
+
+  /**
+   * @see https://platform.openai.com/docs/guides/chat
+   * @param messages
+   * @returns
+   */
+  public chatCompletions(
+    messages: Message[]
+  ): CompletionsResponse | ErrorResponse {
+    const endPoint = OpenAiClient.BASE_PATH + "chat/completions";
     const payload: Record<never, never> = {
       model: "gpt-3.5-turbo",
       messages: messages,
@@ -87,7 +121,7 @@ class OpenAiClient {
 
       return response;
     } catch (e) {
-      console.error(`Completions failed. response: ${JSON.stringify(e)}`);
+      console.error(`Chat completions failed. response: ${JSON.stringify(e)}`);
       if (e instanceof NetworkAccessError) {
         const error = JSON.parse(e.e) as ErrorResponse;
 
