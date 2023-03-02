@@ -464,7 +464,7 @@ function callOpenAi(user: string, messages: Message[]): string {
 
   const credential = store.getUserCredential(user);
   const openAiClient = new OpenAiClient(credential.apiKey);
-  const response = openAiClient.completions(messages);
+  const response = openAiClient.chatCompletions(messages);
 
   if (response.hasOwnProperty("choices")) {
     const replay = response.choices[0].message.content;
