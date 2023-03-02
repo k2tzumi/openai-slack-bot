@@ -431,9 +431,10 @@ function createInputApoKeyBlocks(): Record<never, never>[] {
   ];
 }
 
-const SYSTEM_CONTENT = `You are a SlackBot that answers questions in Japanese.
+const SYSTEM_PROMPT = `You are an excellent Slack bot.
 Please answer the current question accurately, taking into account your knowledge and the content of our previous conversations.
-If you need additional information to provide this accurate response, please ask a question.`;
+If you need additional information to provide this accurate response, please ask a question.
+Please use Slack's markdown notation when dealing with code and URLs in your responses.`;
 
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
@@ -441,7 +442,7 @@ const executeStartTalk = (): void => {
     const messages: Message[] = [
       {
         role: RoleType.System,
-        content: SYSTEM_CONTENT,
+        content: SYSTEM_PROMPT,
       },
       {
         role: RoleType.User,
@@ -484,7 +485,7 @@ const executeReplyTalk = (): void => {
   JobBroker.consumeAsyncJob((parameter: ReplyTalkParameter) => {
     const messages: Message[] = [];
 
-    messages.push({ role: RoleType.System, content: SYSTEM_CONTENT });
+    messages.push({ role: RoleType.System, content: SYSTEM_PROMPT });
     messages.concat(...parameter.prevMessages);
     messages.push({ role: RoleType.User, content: parameter.text });
 
