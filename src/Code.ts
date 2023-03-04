@@ -20,9 +20,10 @@ type BlockActions = Slack.Interactivity.BlockActions;
 type ButtonAction = Slack.Interactivity.ButtonAction;
 type InteractionResponse = Slack.Interactivity.InteractionResponse;
 type AppMentionEvent = Slack.CallbackEvent.AppMentionEvent;
-type MessageEvent = Slack.CallbackEvent.MessageEvent | Record<never, never>;
+type MessageEvent = Slack.CallbackEvent.MessageEvent;
 type MessageRepliedEvent = Slack.CallbackEvent.MessageRepliedEvent;
 type AppsManifest = Slack.Tools.AppsManifest;
+type JSONSerializable = AppsScriptJobqueue.JSONSerializable;
 
 let handler: OAuth2Handler;
 
@@ -179,7 +180,7 @@ function createAppsManifest(
 }
 
 const asyncLogging = (): void => {
-  JobBroker.consumeAsyncJob((parameter: Record<never, never>) => {
+  JobBroker.consumeAsyncJob((parameter: JSONSerializable) => {
     console.info(JSON.stringify(parameter));
   }, "asyncLogging");
 };
@@ -215,7 +216,7 @@ function doPost(e: DoPost): TextOutput {
   throw new Error(`No performed handler, request: ${JSON.stringify(e)}`);
 }
 
-const executeButton = (blockActions: BlockActions): Record<never, never> => {
+const executeButton = (blockActions: BlockActions): Record<string, never> => {
   const action = blockActions.actions[0] as ButtonAction;
   const response: InteractionResponse = {};
 
@@ -389,7 +390,7 @@ const executeMessageEvent = (
   }
 };
 
-function createInputApoKeyBlocks(): Record<never, never>[] {
+function createInputApoKeyBlocks(): Record<string, never>[] {
   return [
     {
       type: "section",
