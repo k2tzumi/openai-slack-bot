@@ -18,5 +18,6 @@
 	vPrefix = true
 	releaseBranch = main
 	versionFile = package.json
+	command = npm update
 	majorLabels = major
 	minorLabels = enhancement,minor

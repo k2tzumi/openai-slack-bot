@@ -42,7 +42,7 @@ describe('OpenAiClient', () => {
               };
             const actual = client.completions('prompt');
             expect(mockFetch.mock.calls[0][0]).toContain('completions');
-            expect(mockFetch.mock.calls[0][1]).toHaveProperty("payload",  "{\"model\":\"gpt-3.5-turbo\",\"prompt\":\"prompt\",\"temperature\":0.5,\"top_p\":0.5,\"frequency_penalty\":0.9,\"max_tokens\":1000}");
+            expect(mockFetch.mock.calls[0][1]).toHaveProperty("payload",  "{\"model\":\"text-davinci-003\",\"prompt\":\"prompt\",\"temperature\":0.5,\"top_p\":0.5,\"frequency_penalty\":0.9,\"max_tokens\":1000}");
             expect(actual).toStrictEqual(response);
         });
     });

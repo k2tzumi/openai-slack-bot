@@ -74,7 +74,7 @@ class OpenAiClient {
   public completions(prompt: string): CompletionsResponse | ErrorResponse {
     const endPoint = OpenAiClient.BASE_PATH + "completions";
     const payload: Record<never, never> = {
-      model: "gpt-3.5-turbo",
+      model: "text-davinci-003",
       prompt: prompt,
       temperature: 0.5,
       top_p: 0.5,
