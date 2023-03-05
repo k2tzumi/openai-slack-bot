@@ -180,7 +180,7 @@ function createAppsManifest(
 }
 
 const asyncLogging = (): void => {
-  JobBroker.consumeAsyncJob((parameter: Parameter) => {
+  JobBroker.consumeAsyncJob<Parameter>((parameter) => {
     console.info(JSON.stringify(parameter));
   }, "asyncLogging");
 };
@@ -205,7 +205,7 @@ function doPost(e: DoPost): TextOutput {
     if (exception instanceof DuplicateEventError) {
       return ContentService.createTextOutput();
     } else {
-      JobBroker.enqueueAsyncJob(asyncLogging, {
+      JobBroker.enqueueAsyncJob<Parameter>(asyncLogging, {
         message: exception.message,
         stack: exception.stack,
       });
@@ -269,7 +269,7 @@ const executeAppMentionEvent = (event: AppMentionEvent): void => {
 
   if (credential) {
     if (addReactions(event.channel, event.ts)) {
-      JobBroker.enqueueAsyncJob(executeStartTalk, event);
+      JobBroker.enqueueAsyncJob<AppMentionEvent>(executeStartTalk, event);
     }
   } else {
     const slackApiClient = new SlackApiClient(handler.token);
@@ -319,7 +319,10 @@ const executeMessageRepliedEvent = (event: MessageRepliedEvent): void => {
         prevMessages,
       } as ReplyTalkParameter;
 
-      JobBroker.enqueueAsyncJob(executeReplyTalk, replyTalkParameter);
+      JobBroker.enqueueAsyncJob<ReplyTalkParameter>(
+        executeReplyTalk,
+        replyTalkParameter
+      );
     }
   }
 };
@@ -381,16 +384,14 @@ function getValidUser(
   return null;
 }
 
-const executeMessageEvent = (
-  event: MessageEvent | MessageRepliedEvent
-): void => {
+const executeMessageEvent = (event: MessageEvent): void => {
   if (event.hasOwnProperty("thread_ts") && !event.hasOwnProperty("bot_id")) {
-    const messageRepliedEvent: MessageRepliedEvent = event;
+    const messageRepliedEvent = event as MessageRepliedEvent;
     executeMessageRepliedEvent(messageRepliedEvent);
   }
 };
 
-function createInputApoKeyBlocks(): {}[] {
+function createInputApoKeyBlocks(): Record<string, any>[] {
   return [
     {
       type: "section",
@@ -441,7 +442,7 @@ Current date: ${new Date().toISOString()}`;
 
 const executeStartTalk = (): void => {
   initializeOAuth2Handler();
-  JobBroker.consumeAsyncJob((event: AppMentionEvent) => {
+  JobBroker.consumeAsyncJob<AppMentionEvent>((event) => {
     const messages: Message[] = [
       {
         role: RoleType.System,
@@ -485,7 +486,7 @@ function callOpenAi(user: string, messages: Message[]): string {
 
 const executeReplyTalk = (): void => {
   initializeOAuth2Handler();
-  JobBroker.consumeAsyncJob((parameter: ReplyTalkParameter) => {
+  JobBroker.consumeAsyncJob<ReplyTalkParameter>((parameter) => {
     const messages: Message[] = [];
 
     messages.push({ role: RoleType.System, content: SYSTEM_PROMPT });
