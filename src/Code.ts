@@ -23,7 +23,7 @@ type AppMentionEvent = Slack.CallbackEvent.AppMentionEvent;
 type MessageEvent = Slack.CallbackEvent.MessageEvent;
 type MessageRepliedEvent = Slack.CallbackEvent.MessageRepliedEvent;
 type AppsManifest = Slack.Tools.AppsManifest;
-type JSONSerializable = AppsScriptJobqueue.JSONSerializable;
+type Parameter = AppsScriptJobqueue.Parameter;
 
 let handler: OAuth2Handler;
 
@@ -180,7 +180,7 @@ function createAppsManifest(
 }
 
 const asyncLogging = (): void => {
-  JobBroker.consumeAsyncJob((parameter: JSONSerializable) => {
+  JobBroker.consumeAsyncJob((parameter: Parameter) => {
     console.info(JSON.stringify(parameter));
   }, "asyncLogging");
 };
@@ -390,7 +390,7 @@ const executeMessageEvent = (
   }
 };
 
-function createInputApoKeyBlocks(): Record<string, never>[] {
+function createInputApoKeyBlocks(): {}[] {
   return [
     {
       type: "section",
