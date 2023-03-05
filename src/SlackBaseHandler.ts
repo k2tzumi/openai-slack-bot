@@ -11,7 +11,10 @@ abstract class SlackBaseHandler<T> {
     this.listners = new Map<string, T>();
   }
 
-  public abstract handle(e: DoPost): { performed: boolean; output: TextOutput | null };
+  public abstract handle(e: DoPost): {
+    performed: boolean;
+    output: TextOutput | null;
+  };
 
   public addListener(type: string, handler: T): void {
     this.listners.set(type, handler);
