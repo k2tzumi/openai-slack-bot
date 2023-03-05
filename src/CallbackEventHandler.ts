@@ -4,6 +4,8 @@ import { SlackBaseHandler } from "./SlackBaseHandler";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type CallbackEvent = Slack.CallbackEvent.EventBase;
+type DoPost = GoogleAppsScript.Events.DoPost;
+
 type CallbackEventFunction = (
   event: CallbackEvent
 ) => Record<never, never> | null | void;
@@ -29,7 +31,7 @@ class DuplicateEventError extends BaseError {
 }
 
 class CallbackEventHandler extends SlackBaseHandler<CallbackEventFunction> {
-  public handle(e): { performed: boolean; output: TextOutput | null } {
+  public handle(e: DoPost): { performed: boolean; output: TextOutput | null } {
     if (e.postData) {
       const postData = JSON.parse(e.postData.getDataAsString());
 
