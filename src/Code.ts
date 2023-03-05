@@ -24,6 +24,7 @@ type MessageEvent = Slack.CallbackEvent.MessageEvent;
 type MessageRepliedEvent = Slack.CallbackEvent.MessageRepliedEvent;
 type AppsManifest = Slack.Tools.AppsManifest;
 type Parameter = AppsScriptJobqueue.Parameter;
+type TimeBasedEvent = AppsScriptJobqueue.TimeBasedEvent;
 
 let handler: OAuth2Handler;
 
@@ -32,7 +33,9 @@ const handleCallback = (request): HtmlOutput => {
   return handler.authCallback(request);
 };
 
-const jobEventHandler = JobBroker.jobEventHandler;
+const jobEventHandler = (event: TimeBasedEvent): void => {
+  JobBroker.jobEventHandler(event);
+};
 
 function initializeOAuth2Handler(): void {
   const properties = PropertiesService.getScriptProperties();
