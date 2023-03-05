@@ -32,9 +32,7 @@ const handleCallback = (request): HtmlOutput => {
   return handler.authCallback(request);
 };
 
-const jobEventHandler = (event): void => {
-  console.log(JSON.stringify(event));
-};
+const jobEventHandler = JobBroker.jobEventHandler;
 
 function initializeOAuth2Handler(): void {
   const properties = PropertiesService.getScriptProperties();
