@@ -179,12 +179,9 @@ function createAppsManifest(
   return appsManifest;
 }
 
-const asyncLogging = () => {
-  JobBroker.consumeAsyncJob<Parameter>((parameter) => {
-    console.info(JSON.stringify(parameter));
-
-    return true;
-  }, "asyncLogging");
+const asyncLogging = (parameter: Parameter): boolean => {
+  console.info(JSON.stringify(parameter));
+  return true;
 };
 
 function doPost(e: DoPost): TextOutput {
@@ -442,25 +439,25 @@ Please use Slack's markdown notation when dealing with code and URLs in your res
 Knowledge cutoff: 0.9
 Current date: ${new Date().toISOString()}`;
 
-const executeStartTalk = (): void => {
+const executeStartTalk = (event: AppMentionEvent): boolean => {
   initializeOAuth2Handler();
-  JobBroker.consumeAsyncJob<AppMentionEvent>((event) => {
-    const messages: Message[] = [
-      {
-        role: RoleType.System,
-        content: SYSTEM_PROMPT,
-      },
-      {
-        role: RoleType.User,
-        content: event.text,
-      },
-    ];
+  const messages: Message[] = [
+    {
+      role: RoleType.System,
+      content: SYSTEM_PROMPT,
+    },
+    {
+      role: RoleType.User,
+      content: event.text,
+    },
+  ];
 
-    const replay = callOpenAi(event.user, messages);
+  const replay = callOpenAi(event.user, messages);
 
-    const client = new SlackApiClient(handler.token);
-    client.chatPostMessage(event.channel, replay, event.ts);
-  }, "executeStartTalk");
+  const client = new SlackApiClient(handler.token);
+  client.chatPostMessage(event.channel, replay, event.ts);
+
+  return true;
 };
 
 function callOpenAi(user: string, messages: Message[]): string {
@@ -486,20 +483,20 @@ function callOpenAi(user: string, messages: Message[]): string {
   }
 }
 
-const executeReplyTalk = (): void => {
+const executeReplyTalk = (parameter: ReplyTalkParameter): boolean => {
   initializeOAuth2Handler();
-  JobBroker.consumeAsyncJob<ReplyTalkParameter>((parameter) => {
-    const messages: Message[] = [];
+  const messages: Message[] = [];
 
-    messages.push({ role: RoleType.System, content: SYSTEM_PROMPT });
-    messages.concat(...parameter.prevMessages);
-    messages.push({ role: RoleType.User, content: parameter.text });
+  messages.push({ role: RoleType.System, content: SYSTEM_PROMPT });
+  messages.concat(...parameter.prevMessages);
+  messages.push({ role: RoleType.User, content: parameter.text });
 
-    const replay = callOpenAi(parameter.user, messages);
+  const replay = callOpenAi(parameter.user, messages);
 
-    const client = new SlackApiClient(handler.token);
-    client.chatPostMessage(parameter.channel, replay, parameter.thread_ts);
-  }, "executeReplyTalk");
+  const client = new SlackApiClient(handler.token);
+  client.chatPostMessage(parameter.channel, replay, parameter.thread_ts);
+
+  return true;
 };
 
 function makePassphraseSeeds(user_id: string): string {
