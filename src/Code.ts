@@ -32,6 +32,10 @@ const handleCallback = (request): HtmlOutput => {
   return handler.authCallback(request);
 };
 
+const jobEventHandler = (event): void => {
+  console.log(JSON.stringify(event));
+};
+
 function initializeOAuth2Handler(): void {
   const properties = PropertiesService.getScriptProperties();
   const slackCredentialStore = new SlackCredentialStore(properties);
@@ -507,4 +511,4 @@ function makePassphraseSeeds(user_id: string): string {
   return credentail?.client_id + user_id + credentail?.client_secret;
 }
 
-export { doPost, doGet, createInputApoKeyBlocks };
+export { doPost, doGet, createInputApoKeyBlocks, jobEventHandler };
