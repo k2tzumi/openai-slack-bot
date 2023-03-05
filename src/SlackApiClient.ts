@@ -231,7 +231,7 @@ class SlackApiClient {
     channel: string,
     text: string,
     user: string,
-    blocks: (Block | Record<never, never>)[] = null
+    blocks: (Block | Record<never, never>)[] | null = null
   ): void {
     const endPoint = SlackApiClient.BASE_PATH + "chat.postEphemeral";
     let payload: Record<never, never> = {
@@ -260,9 +260,9 @@ class SlackApiClient {
   public chatPostMessage(
     channel: string,
     text: string,
-    thread_ts: string = null,
-    attachments: Record<never, never>[] = null,
-    blocks: (Block | Record<never, never>)[] = null
+    thread_ts: string | null = null,
+    attachments: Record<never, never>[] | null = null,
+    blocks: (Block | Record<never, never>)[] | null = null
   ): string {
     const endPoint = SlackApiClient.BASE_PATH + "chat.postMessage";
     let payload: Record<never, never> = {
@@ -569,7 +569,7 @@ class SlackApiClient {
   }
 
   private convertBlock2Text(blocks: (Block | Record<never, never>)[]): string {
-    const textArray = [];
+    const textArray: string[] = [];
     blocks.forEach((block) => {
       if (block.hasOwnProperty("type")) {
         const obj = block as Block;
@@ -665,6 +665,8 @@ class SlackApiClient {
             this.getRequestOptions()
           );
           break;
+        default:
+          throw new Error("Unknown method.");
       }
     } catch (e) {
       console.warn(`DNS error, etc. ${e.message}`);

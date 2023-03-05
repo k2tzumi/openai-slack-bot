@@ -193,6 +193,8 @@ class OpenAiClient {
             this.getRequestOptions()
           );
           break;
+        default:
+          throw new Error("Unknown method.");
       }
     } catch (e) {
       console.warn(`DNS error, etc. ${e.message}`);
