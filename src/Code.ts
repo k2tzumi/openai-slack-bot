@@ -179,9 +179,11 @@ function createAppsManifest(
   return appsManifest;
 }
 
-const asyncLogging = (): void => {
+const asyncLogging = () => {
   JobBroker.consumeAsyncJob<Parameter>((parameter) => {
     console.info(JSON.stringify(parameter));
+
+    return true;
   }, "asyncLogging");
 };
 
