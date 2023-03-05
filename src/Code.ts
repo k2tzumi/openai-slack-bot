@@ -34,7 +34,8 @@ const handleCallback = (request): HtmlOutput => {
 };
 
 const jobEventHandler = (event: TimeBasedEvent): void => {
-  JobBroker.jobEventHandler(event);
+  console.log(JSON.stringify(event));
+  JobBroker.consumeJob(event);
 };
 
 function initializeOAuth2Handler(): void {
