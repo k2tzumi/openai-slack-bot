@@ -67,3 +67,8 @@ test: node_modules
 undeploy: ## all undeploy Google apps scripts
 undeploy:
 	$(CLASP) undeploy --all
+
+.PHONY: npm-check-updates
+npm-check-updates: ## npm check updates
+npm-check-updates:
+	npx npm-check-updates -u
