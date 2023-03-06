@@ -33,10 +33,9 @@ const handleCallback = (request): HtmlOutput => {
   return handler.authCallback(request);
 };
 
-const jobEventHandler = (event: TimeBasedEvent): void => {
-  console.log(JSON.stringify(event));
+function jobEventHandler(event: TimeBasedEvent): void {
   JobBroker.consumeJob(event, globalThis);
-};
+}
 
 function initializeOAuth2Handler(): void {
   const properties = PropertiesService.getScriptProperties();
@@ -185,10 +184,10 @@ function createAppsManifest(
   return appsManifest;
 }
 
-const asyncLogging = (parameter: Parameter): boolean => {
+function asyncLogging(parameter: Parameter): boolean {
   console.info(JSON.stringify(parameter));
   return true;
-};
+}
 
 function doPost(e: DoPost): TextOutput {
   initializeOAuth2Handler();
@@ -445,7 +444,7 @@ Please use Slack's markdown notation when dealing with code and URLs in your res
 Knowledge cutoff: 0.9
 Current date: ${new Date().toISOString()}`;
 
-const executeStartTalk = (event: AppMentionEvent): boolean => {
+function executeStartTalk(event: AppMentionEvent): boolean {
   initializeOAuth2Handler();
   const messages: Message[] = [
     {
@@ -464,7 +463,7 @@ const executeStartTalk = (event: AppMentionEvent): boolean => {
   client.chatPostMessage(event.channel, replay, event.ts);
 
   return true;
-};
+}
 
 function callOpenAi(user: string, messages: Message[]): string {
   const store = new UserCredentialStore(
@@ -489,7 +488,7 @@ function callOpenAi(user: string, messages: Message[]): string {
   }
 }
 
-const executeReplyTalk = (parameter: ReplyTalkParameter): boolean => {
+function executeReplyTalk(parameter: ReplyTalkParameter): boolean {
   initializeOAuth2Handler();
   const messages: Message[] = [];
 
@@ -503,7 +502,7 @@ const executeReplyTalk = (parameter: ReplyTalkParameter): boolean => {
   client.chatPostMessage(parameter.channel, replay, parameter.thread_ts);
 
   return true;
-};
+}
 
 function makePassphraseSeeds(user_id: string): string {
   const properties = PropertiesService.getScriptProperties();
