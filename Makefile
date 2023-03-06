@@ -13,7 +13,7 @@ help:
 	$(CLASP) setting fileExtension ts
 	# $(CLASP) setting filePushOrder
 	sed -i -e 's/}/,"filePushOrder":["src\/OAuth2Handler.ts","src\/SlackBaseHandler.ts","src\/BaseError.ts"]}/' .clasp.json
-	rm .clasp.json-e
+	rm -f .clasp.json-e
 
 node_modules:
 	npm ci
@@ -67,3 +67,8 @@ test: node_modules
 undeploy: ## all undeploy Google apps scripts
 undeploy:
 	$(CLASP) undeploy --all
+
+.PHONY: npm-check-updates
+npm-check-updates: ## npm check updates
+npm-check-updates:
+	npx npm-check-updates -u
