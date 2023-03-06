@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.5](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.4...v0.0.5) - 2023-03-06
+### Other Changes
+- Support explicit failure by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/16
+
 ## [v0.0.4](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.3...v0.0.4) - 2023-03-04
 ### Other Changes
 - Update packeage-lock.json at release time by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/12
