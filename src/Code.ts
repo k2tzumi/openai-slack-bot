@@ -10,6 +10,8 @@ import { SlackCredentialStore } from "./SlackCredentialStore";
 import { SlackConfigurator } from "./SlackConfigurator";
 import "apps-script-jobqueue";
 import { NetworkAccessError } from "./NetworkAccessError";
+import { CustomSearchClient, WebItem } from "./CustomSearchClient";
+import { CustomSearchCredential } from "./CustomSearchCredential";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -446,10 +448,12 @@ Current date: ${new Date().toISOString()}`;
 
 function executeStartTalk(event: AppMentionEvent): boolean {
   initializeOAuth2Handler();
-  const replay = convertSearchWord(event.user, trimMention(event.text));
+  const word = convertSearchWord(event.user, trimMention(event.text));
+
+  const wordItems = executeSearch(word);
 
   const client = new SlackApiClient(handler.token);
-  client.chatPostMessage(event.channel, replay, event.ts);
+  client.chatPostMessage(event.channel, JSON.stringify(wordItems), event.ts);
 
   return true;
 }
@@ -490,21 +494,33 @@ function convertSearchWord(user: string, text: string): string {
   const credential = store.getUserCredential(user);
   const openAiClient = new OpenAiClient(credential.apiKey);
   const response = openAiClient.edits(
-    "Convert to appropriate web search keywords to answer questions",
+    "Convert to appropriate web search keywords to answer the question. Converted keywords should be 320 characters or less.",
     text
   );
 
   if (response.hasOwnProperty("choices")) {
-    const replay = response.choices[0].text;
-    if (replay === "") {
-      console.info(`No replay. response:${replay}`);
-
-      return "I don't know what you're talking about for a second. :smirk:";
+    const word = response.choices[0].text;
+    if (word === "") {
+      console.warn(`No search word. response:${JSON.stringify(response)}`);
+      throw new Error(`No search word. response:${JSON.stringify(response)}`);
     }
-    return replay;
+
+    return word;
   } else {
-    return "Oops. Something went wrong. :cold_sweat:";
+    console.warn(`Something went wrong`);
+    throw new Error(
+      `Something went wrong. response:${JSON.stringify(response)}`
+    );
   }
+}
+
+function executeSearch(word: string): WebItem[] {
+  const properties = PropertiesService.getScriptProperties();
+  const cient = new CustomSearchClient(
+    CustomSearchCredential.create(properties)
+  );
+
+  return cient.search(word);
 }
 
 function executeReplyTalk(parameter: ReplyTalkParameter): boolean {

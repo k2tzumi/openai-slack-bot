@@ -28,7 +28,8 @@
     "https://slack.com/",
     "https://api.slack.com/",
     "https://hooks.slack.com/",
-    "https://api.openai.com/"
+    "https://api.openai.com/",
+    "https://www.googleapis.com/"
   ],
   "runtimeVersion": "V8"
 }
