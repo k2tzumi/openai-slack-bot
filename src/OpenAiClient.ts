@@ -132,6 +132,40 @@ class OpenAiClient {
     }
   }
 
+  /**
+   * @see https://platform.openai.com/docs/api-reference/edits/create
+   * @param messages
+   * @returns
+   */
+  public edits(
+    instruction: string,
+    input?: string
+  ): CompletionsResponse | ErrorResponse {
+    const endPoint = OpenAiClient.BASE_PATH + "edits";
+    const payload: Record<never, never> = {
+      model: "text-davinci-edit-001",
+      input,
+      instruction,
+      temperature: 0.5,
+      top_p: 0.5,
+    };
+
+    try {
+      const response: CompletionsResponse = this.invokeAPI(endPoint, payload);
+
+      return response;
+    } catch (e) {
+      console.error(`Edits failed. response: ${JSON.stringify(e)}`);
+      if (e instanceof NetworkAccessError) {
+        const error = JSON.parse(e.e) as ErrorResponse;
+
+        return error;
+      }
+
+      throw e;
+    }
+  }
+
   private postRequestHeader() {
     return {
       // eslint-disable-next-line @typescript-eslint/naming-convention

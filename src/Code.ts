@@ -446,23 +446,16 @@ Current date: ${new Date().toISOString()}`;
 
 function executeStartTalk(event: AppMentionEvent): boolean {
   initializeOAuth2Handler();
-  const messages: Message[] = [
-    {
-      role: RoleType.System,
-      content: SYSTEM_PROMPT,
-    },
-    {
-      role: RoleType.User,
-      content: event.text,
-    },
-  ];
-
-  const replay = callOpenAi(event.user, messages);
+  const replay = convertSearchWord(event.user, trimMention(event.text));
 
   const client = new SlackApiClient(handler.token);
   client.chatPostMessage(event.channel, replay, event.ts);
 
   return true;
+}
+
+function trimMention(text: string): string {
+  return text.replace(/<@U[A-Za-z0-9]+>/g, "");
 }
 
 function callOpenAi(user: string, messages: Message[]): string {
@@ -477,6 +470,32 @@ function callOpenAi(user: string, messages: Message[]): string {
 
   if (response.hasOwnProperty("choices")) {
     const replay = response.choices[0].message.content;
+    if (replay === "") {
+      console.info(`No replay. response:${replay}`);
+
+      return "I don't know what you're talking about for a second. :smirk:";
+    }
+    return replay;
+  } else {
+    return "Oops. Something went wrong. :cold_sweat:";
+  }
+}
+
+function convertSearchWord(user: string, text: string): string {
+  const store = new UserCredentialStore(
+    PropertiesService.getUserProperties(),
+    makePassphraseSeeds(user)
+  );
+
+  const credential = store.getUserCredential(user);
+  const openAiClient = new OpenAiClient(credential.apiKey);
+  const response = openAiClient.edits(
+    "Convert to appropriate web search keywords to answer questions",
+    text
+  );
+
+  if (response.hasOwnProperty("choices")) {
+    const replay = response.choices[0].text;
     if (replay === "") {
       console.info(`No replay. response:${replay}`);
 
