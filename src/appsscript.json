@@ -16,6 +16,11 @@
         "userSymbol": "OAuth2",
         "libraryId": "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF",
         "version": "43"
+      },
+      {
+        "userSymbol": "Cheerio",
+        "libraryId": "1ReeQ6WO8kKNxoaA_O0XEQ589cIrRvEBA9qcWpNqdOP17i47u6N9M5Xh0",
+        "version": "14"
       }
     ]
   },
@@ -29,7 +34,10 @@
     "https://api.slack.com/",
     "https://hooks.slack.com/",
     "https://api.openai.com/",
-    "https://www.googleapis.com/"
+    "https://www.googleapis.com/",
+    "https://*.com/",
+    "https://*.jp/"
   ],
-  "runtimeVersion": "V8"
+  "runtimeVersion": "V8",
+  "oauthScopes": ["https://www.googleapis.com/auth/script.external_request"]
 }

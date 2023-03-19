@@ -10,6 +10,7 @@ module.exports = {
         Utilities: {},
         cCryptoGS: {},
         JobBroker: {},
+        Cheerio: {},
     },
     moduleDirectories: [
         'node_modules',

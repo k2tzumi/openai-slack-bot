@@ -12,6 +12,7 @@ import "apps-script-jobqueue";
 import { NetworkAccessError } from "./NetworkAccessError";
 import { CustomSearchClient, WebItem } from "./CustomSearchClient";
 import { CustomSearchCredential } from "./CustomSearchCredential";
+import Cheerio from "cheerio";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -450,12 +451,37 @@ function executeStartTalk(event: AppMentionEvent): boolean {
   initializeOAuth2Handler();
   const word = convertSearchWord(event.user, trimMention(event.text));
 
-  const wordItems = executeSearch(word);
+  console.log(`convertSearchWord. word: ${word}`);
+
+  const webItems = executeSearch(word);
+
+  console.log(`webItems: ${JSON.stringify(webItems)}`);
+
+  const article = findArticle(webItems[0].link);
+
+  console.log(`article: ${article}`);
 
   const client = new SlackApiClient(handler.token);
-  client.chatPostMessage(event.channel, JSON.stringify(wordItems), event.ts);
+  client.chatPostMessage(event.channel, article, event.ts);
 
   return true;
+}
+
+function findArticle(url: string): string {
+  const html = getHTML(url);
+
+  return extractBody(html);
+}
+
+function extractBody(html: string): string {
+  const $ = Cheerio.load(html);
+
+  return $("p").first().text();
+}
+
+function getHTML(url: string): string {
+  const response = UrlFetchApp.fetch(url);
+  return response.getContentText();
 }
 
 function trimMention(text: string): string {
