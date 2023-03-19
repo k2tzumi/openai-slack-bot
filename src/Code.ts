@@ -520,7 +520,7 @@ function convertSearchWord(user: string, text: string): string {
   const credential = store.getUserCredential(user);
   const openAiClient = new OpenAiClient(credential.apiKey);
   const response = openAiClient.edits(
-    "Convert to appropriate web search keywords to answer the question. Converted keywords should be 320 characters or less.",
+    "質問に答えるためのWeb検索キーワードに変換",
     text
   );
 

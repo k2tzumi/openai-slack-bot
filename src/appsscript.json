@@ -36,8 +36,11 @@
     "https://api.openai.com/",
     "https://www.googleapis.com/",
     "https://*.com/",
-    "https://*.jp/"
+    "https://*.jp/",
+    "https://*.tv/"
   ],
   "runtimeVersion": "V8",
-  "oauthScopes": ["https://www.googleapis.com/auth/script.external_request"]
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.external_request"
+  ]
 }
