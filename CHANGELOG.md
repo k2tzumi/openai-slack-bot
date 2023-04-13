@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.6](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.5...v0.0.6) - 2023-04-13
+### Other Changes
+- Append insufficient quota error by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/19
+
 ## [v0.0.5](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.4...v0.0.5) - 2023-03-06
 ### Other Changes
 - Support explicit failure by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/16
