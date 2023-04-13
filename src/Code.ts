@@ -4,7 +4,12 @@ import { OAuth2Handler } from "./OAuth2Handler";
 import { Slack } from "./slack/types/index.d";
 import { SlackWebhooks } from "./SlackWebhooks";
 import { ConversationsRepliesResponse, SlackApiClient } from "./SlackApiClient";
-import { OpenAiClient, Message, RoleType } from "./OpenAiClient";
+import {
+  OpenAiClient,
+  Message,
+  RoleType,
+  InsufficientQuotaError,
+} from "./OpenAiClient";
 import { UserCredentialStore, UserCredential } from "./UserCredentialStore";
 import { SlackCredentialStore } from "./SlackCredentialStore";
 import { SlackConfigurator } from "./SlackConfigurator";
@@ -473,18 +478,29 @@ function callOpenAi(user: string, messages: Message[]): string {
 
   const credential = store.getUserCredential(user);
   const openAiClient = new OpenAiClient(credential.apiKey);
-  const response = openAiClient.chatCompletions(messages);
 
-  if (response.hasOwnProperty("choices")) {
-    const replay = response.choices[0].message.content;
-    if (replay === "") {
-      console.info(`No replay. response:${replay}`);
+  try {
+    const response = openAiClient.chatCompletions(messages);
 
-      return "I don't know what you're talking about for a second. :smirk:";
+    if (response.hasOwnProperty("choices")) {
+      const replay = response.choices[0].message.content;
+      if (replay === "") {
+        console.info(`No replay. response:${replay}`);
+
+        return "I don't know what you're talking about for a second. :smirk:";
+      }
+      return replay;
+    } else {
+      return "Oops. Something went wrong. :cold_sweat:";
     }
-    return replay;
-  } else {
-    return "Oops. Something went wrong. :cold_sweat:";
+  } catch (e) {
+    if (e instanceof InsufficientQuotaError) {
+      store.removeUserCredential(user);
+
+      return "API key with insufficient quota. Please re-register now that you have de-authenticated.";
+    }
+
+    return "see :eyes:\nhttps://status.openai.com/";
   }
 }
 

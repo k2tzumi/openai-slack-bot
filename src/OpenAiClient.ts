@@ -52,6 +52,12 @@ enum RoleType {
   System = "system",
 }
 
+class InsufficientQuotaError extends Error {
+  constructor(public message: string) {
+    super(message);
+  }
+}
+
 class OpenAiClient {
   static readonly BASE_PATH = "https://api.openai.com/v1/";
 
@@ -204,6 +210,14 @@ class OpenAiClient {
     switch (response.getResponseCode()) {
       case 200:
         return JSON.parse(response.getContentText());
+      case 429:
+        const error = JSON.parse(response.getContentText());
+        if (error["error"]["type"] === "insufficient_quota") {
+          console.warn(
+            `OpenAI API insufficient quota error. endpoint: ${endPoint}, status: ${response.getResponseCode()}, content: ${response.getContentText()}`
+          );
+          throw new InsufficientQuotaError(error["error"]["message"]);
+        }
       default:
         console.warn(
           `OpenAI API error. endpoint: ${endPoint}, status: ${response.getResponseCode()}, content: ${response.getContentText()}`
@@ -236,4 +250,4 @@ class OpenAiClient {
   }
 }
 
-export { OpenAiClient, Message, RoleType };
+export { OpenAiClient, Message, RoleType, InsufficientQuotaError };
