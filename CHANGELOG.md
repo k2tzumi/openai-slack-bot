@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.7](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.6...v0.0.7) - 2023-04-16
+### Other Changes
+- Append chat/completions test by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/21
+
 ## [v0.0.6](https://github.com/k2tzumi/openai-slack-bot/compare/v0.0.5...v0.0.6) - 2023-04-13
 ### Other Changes
 - Append insufficient quota error by @k2tzumi in https://github.com/k2tzumi/openai-slack-bot/pull/19
