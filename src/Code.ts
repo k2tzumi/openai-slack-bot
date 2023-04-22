@@ -15,6 +15,9 @@ import { SlackCredentialStore } from "./SlackCredentialStore";
 import { SlackConfigurator } from "./SlackConfigurator";
 import "apps-script-jobqueue";
 import { NetworkAccessError } from "./NetworkAccessError";
+import { CustomSearchClient, WebItem } from "./CustomSearchClient";
+import { CustomSearchCredential } from "./CustomSearchCredential";
+import Cheerio from "cheerio";
 
 type TextOutput = GoogleAppsScript.Content.TextOutput;
 type HtmlOutput = GoogleAppsScript.HTML.HtmlOutput;
@@ -451,23 +454,43 @@ Current date: ${new Date().toISOString()}`;
 
 function executeStartTalk(event: AppMentionEvent): boolean {
   initializeOAuth2Handler();
-  const messages: Message[] = [
-    {
-      role: RoleType.System,
-      content: SYSTEM_PROMPT,
-    },
-    {
-      role: RoleType.User,
-      content: event.text,
-    },
-  ];
+  const word = convertSearchWord(event.user, trimMention(event.text));
 
-  const replay = callOpenAi(event.user, messages);
+  console.log(`convertSearchWord. word: ${word}`);
+
+  const webItems = executeSearch(word);
+
+  console.log(`webItems: ${JSON.stringify(webItems)}`);
+
+  const article = findArticle(webItems[0].link);
+
+  console.log(`article: ${article}`);
 
   const client = new SlackApiClient(handler.token);
-  client.chatPostMessage(event.channel, replay, event.ts);
+  client.chatPostMessage(event.channel, article, event.ts);
 
   return true;
+}
+
+function findArticle(url: string): string {
+  const html = getHTML(url);
+
+  return extractBody(html);
+}
+
+function extractBody(html: string): string {
+  const $ = Cheerio.load(html);
+
+  return $("p").first().text();
+}
+
+function getHTML(url: string): string {
+  const response = UrlFetchApp.fetch(url);
+  return response.getContentText();
+}
+
+function trimMention(text: string): string {
+  return text.replace(/<@U[A-Za-z0-9]+>/g, "");
 }
 
 function callOpenAi(user: string, messages: Message[]): string {
@@ -502,6 +525,44 @@ function callOpenAi(user: string, messages: Message[]): string {
 
     return "see :eyes:\nhttps://status.openai.com/";
   }
+}
+
+function convertSearchWord(user: string, text: string): string {
+  const store = new UserCredentialStore(
+    PropertiesService.getUserProperties(),
+    makePassphraseSeeds(user)
+  );
+
+  const credential = store.getUserCredential(user);
+  const openAiClient = new OpenAiClient(credential.apiKey);
+  const response = openAiClient.edits(
+    "質問に答えるためのWeb検索キーワードに変換",
+    text
+  );
+
+  if (response.hasOwnProperty("choices")) {
+    const word = response.choices[0].text;
+    if (word === "") {
+      console.warn(`No search word. response:${JSON.stringify(response)}`);
+      throw new Error(`No search word. response:${JSON.stringify(response)}`);
+    }
+
+    return word;
+  } else {
+    console.warn(`Something went wrong`);
+    throw new Error(
+      `Something went wrong. response:${JSON.stringify(response)}`
+    );
+  }
+}
+
+function executeSearch(word: string): WebItem[] {
+  const properties = PropertiesService.getScriptProperties();
+  const cient = new CustomSearchClient(
+    CustomSearchCredential.create(properties)
+  );
+
+  return cient.search(word);
 }
 
 function executeReplyTalk(parameter: ReplyTalkParameter): boolean {

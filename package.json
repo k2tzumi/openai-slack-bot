@@ -20,6 +20,7 @@
   "homepage": "https://github.com/k2tzumi/openai-slack-bot#readme",
   "devDependencies": {
     "@google/clasp": "^2.4.2",
+    "@types/cheerio": "^0.22.31",
     "@types/google-apps-script": "^1.0.57",
     "@types/google-apps-script-oauth2": "^38.0.0",
     "@types/jest": "^29.4.0",
